@@ -1,0 +1,233 @@
+name: aws_cloudtrail
+display_name: AWS CloudTrail
+version: "1.0.0"
+description: "Parses AWS CloudTrail JSON events including API calls, user identity, resources, and error tracking"
+category: cloud
+vendor: "Amazon"
+product: "CloudTrail"
+parser_vrl: |
+  # AWS CloudTrail Parser
+  # Parses standard JSON CloudTrail events
+
+  # Initialize required structures
+  .udm = {}
+  .ext = {}
+  .metadata = {}
+
+  # Set defaults
+  .udm.timestamp = now()
+  .udm.cloud_provider = "aws"
+
+  # Get raw log content
+  raw_log = to_string(.message) ?? ""
+
+  # Parse JSON
+  parsed, err = parse_json(raw_log)
+
+  if err == null {
+      # --- Core Fields ---
+
+      # Timestamp (ISO 8601)
+      if exists(parsed.eventTime) {
+          ts, ts_err = parse_timestamp(string!(parsed.eventTime), "%+")
+          if ts_err == null {
+              .udm.timestamp = format_timestamp!(ts, format: "%Y-%m-%d %H:%M:%S")
+          }
+      }
+
+      # Action (Event Name)
+      if exists(parsed.eventName) {
+          .udm.action = string!(parsed.eventName)
+      }
+
+      # Cloud Service (from eventSource, e.g., "s3.amazonaws.com" -> "s3")
+      if exists(parsed.eventSource) {
+          src = string!(parsed.eventSource)
+          parts = split(src, ".")
+          if length(parts) > 0 {
+              .udm.cloud_service = parts[0]
+          }
+          .ext.event_source = src
+      }
+
+      # Region
+      if exists(parsed.awsRegion) {
+          .udm.cloud_region = string!(parsed.awsRegion)
+      }
+
+      # Source IP Handling (Polymorphic field: IP or DNS)
+      if exists(parsed.sourceIPAddress) {
+          ip_val = string!(parsed.sourceIPAddress)
+          if is_ipv4(ip_val) || is_ipv6(ip_val) {
+              .udm.src_ip = ip_val
+          } else {
+              .udm.src_host = ip_val
+          }
+      }
+
+      # User Agent
+      if exists(parsed.userAgent) {
+          .udm.http_user_agent = string!(parsed.userAgent)
+      }
+
+      # Error Code / Status
+      if exists(parsed.errorCode) {
+          .udm.status = "failure"
+          .ext.error_code = string!(parsed.errorCode)
+          if exists(parsed.errorMessage) {
+              .ext.error_message = string!(parsed.errorMessage)
+          }
+      } else {
+          .udm.status = "success"
+      }
+
+      # Request ID (UUID - Map to string fields only)
+      if exists(parsed.requestID) {
+          .ext.request_id = string!(parsed.requestID)
+          .metadata.request_id = string!(parsed.requestID)
+      }
+
+      # Event ID
+      if exists(parsed.eventID) {
+          .metadata.event_id = string!(parsed.eventID)
+      }
+
+      # Event Type/Category
+      if exists(parsed.eventType) {
+          .ext.event_type = string!(parsed.eventType)
+      }
+      if exists(parsed.eventCategory) {
+          .udm.category = string!(parsed.eventCategory)
+      }
+
+      # --- User Identity ---
+      if exists(parsed.userIdentity) {
+          identity = parsed.userIdentity
+
+          # User / Principal
+          if exists(identity.arn) {
+              .udm.user = string!(identity.arn)
+              .ext.user_arn = string!(identity.arn)
+          } else if exists(identity.userName) {
+              .udm.user = string!(identity.userName)
+          }
+
+          # Account ID & Namespace
+          if exists(identity.accountId) {
+              acct_id = string!(identity.accountId)
+              .udm.cloud_account_id = acct_id
+              .udm.namespace = "aws:" + acct_id
+          } else {
+              .udm.namespace = "aws:"
+          }
+
+          # Identity Type
+          if exists(identity.type) {
+              .udm.src_user_type = string!(identity.type)
+          }
+
+          # Access Key
+          if exists(identity.accessKeyId) {
+              .ext.access_key_id = string!(identity.accessKeyId)
+          }
+
+          # Principal ID (String - Map to ext)
+          if exists(identity.principalId) {
+              .ext.principal_id = string!(identity.principalId)
+          }
+      } else {
+          .udm.namespace = "aws:"
+      }
+
+      # --- Resources ---
+      if exists(parsed.resources) && is_array(parsed.resources) {
+          resources = array!(parsed.resources)
+          if length(resources) > 0 {
+              res = resources[0]
+              if exists(res.ARN) {
+                  .udm.object = string!(res.ARN)
+                  .ext.resource_arn = string!(res.ARN)
+              }
+              if exists(res.type) {
+                  .udm.resource_type = string!(res.type)
+              }
+              if exists(res.accountId) {
+                  .ext.resource_account_id = string!(res.accountId)
+              }
+              .ext.resources = encode_json(parsed.resources)
+          }
+      }
+
+      # --- Request Parameters (Context specific) ---
+      if exists(parsed.requestParameters) {
+          params = parsed.requestParameters
+
+          if exists(params.resourceName) {
+              .udm.resource_name = string!(params.resourceName)
+          }
+          if exists(params.bucketName) {
+              .udm.resource_name = string!(params.bucketName)
+              .udm.storage_name = string!(params.bucketName)
+          }
+          if exists(params.key) {
+              .udm.file_path = string!(params.key)
+          }
+      }
+
+      # --- Additional Event Data ---
+      if exists(parsed.additionalEventData) {
+          data = parsed.additionalEventData
+
+          if exists(data.MFAUsed) {
+              mfa = string!(data.MFAUsed)
+              .udm.mfa_used = if downcase(mfa) == "yes" { "true" } else { "false" }
+          }
+
+          if exists(data.AuthenticationMethod) {
+              .udm.authentication_method = string!(data.AuthenticationMethod)
+          }
+
+          if exists(data.CipherSuite) {
+              .ext.cipher_suite = string!(data.CipherSuite)
+          }
+
+          if exists(data.SignatureVersion) {
+              .ext.signature_version = string!(data.SignatureVersion)
+          }
+      }
+
+      # --- NanoSIEM Enrichment (if present) ---
+      if exists(parsed."_nanosiem") {
+          nano = parsed."_nanosiem"
+          if exists(nano.accountAlias) {
+              .udm.cloud_account_name = string!(nano.accountAlias)
+          }
+          if exists(nano.changeType) {
+              .udm.change_type = string!(nano.changeType)
+          }
+          if exists(nano.status) {
+              status_val = downcase(string!(nano.status))
+              .udm.status = if status_val == "success" { "success" } else { "failure" }
+          }
+      }
+
+      # Recipient Account
+      if exists(parsed.recipientAccountId) {
+          .ext.recipient_account_id = string!(parsed.recipientAccountId)
+      }
+
+      # Read Only flag
+      if exists(parsed.readOnly) {
+          val = parsed.readOnly
+          .ext.read_only = to_string(val) ?? "false"
+      }
+
+  } else {
+      .metadata.parse_error = to_string(err)
+  }
+
+  # Set parser name
+  .metadata.parser = "aws_cloudtrail"
+
+  # Preserve raw log
+  .message = raw_log

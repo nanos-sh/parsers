@@ -1,0 +1,51 @@
+name: apache
+display_name: Apache HTTP Server
+version: "1.0.0"
+description: "Parses Apache combined/common log format including client IP, method, status, bytes, user agent, and referrer"
+category: application
+vendor: "Apache Software Foundation"
+product: "Apache HTTP Server"
+parser_vrl: |
+  # Apache Combined Log Format Parser
+  # Format: %h %l %u %t "%r" %>s %b "%{Referer}i" "%{User-Agent}i"
+
+  # Initialize state
+  .udm = {}
+  .ext = {}
+  .metadata = {}
+  raw_log = to_string(.message) ?? ""
+
+  # Parse using Apache log parser (combined format)
+  parsed, err = parse_apache_log(raw_log, "combined")
+
+  if err == null {
+      # Network / Identity
+      .udm.src_ip = parsed.host
+      .udm.user = if parsed.user != "-" { parsed.user } else { null }
+      .udm.protocol = "HTTP"
+
+      # HTTP / Web
+      .udm.http_method = parsed.method
+      .udm.http_status_code = parsed.status # Already an integer
+      .udm.bytes_out = parsed.size # Already an integer
+      .udm.http_user_agent = parsed.agent
+      .udm.uri_path = parsed.path
+
+      if parsed.referrer != "-" {
+          .udm.http_referrer = parsed.referrer
+      }
+
+      # Standard mappings
+      .udm.action = parsed.method
+
+      # Timestamp handling
+      # Apache parser returns a timestamp object, we need to format it to ISO string
+      if parsed.timestamp != null {
+          .udm.timestamp = format_timestamp!(parsed.timestamp, format: "%Y-%m-%d %H:%M:%S")
+      }
+  } else {
+      .metadata.parse_error = to_string(err)
+  }
+
+  # Preserve raw log
+  .message = raw_log
