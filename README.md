@@ -1,6 +1,6 @@
-# NanoSIEM Community Parsers
+# nano Community Parsers
 
-A collection of VRL parsers for NanoSIEM log source ingestion.
+A collection of VRL parsers for nano log source ingestion.
 
 ## Structure
 
@@ -17,10 +17,10 @@ Each parser lives in its own directory under `parsers/` with a `parser.yaml` fil
 
 ## Usage
 
-Import these parsers into NanoSIEM via **Log Sources > Repositories**. Parsers are imported as draft log sources ready for review and deployment.
+Import these parsers into nano via **Log Sources > Repositories**. Parsers are imported as draft log sources ready for review and deployment.
 
 ## Contributing
 
 1. Create a new directory under `parsers/` with your parser name
 2. Add a `parser.yaml` following the format above
-3. Test your VRL in NanoSIEM's parser editor before submitting
+3. Test your VRL in nano's parser editor before submitting

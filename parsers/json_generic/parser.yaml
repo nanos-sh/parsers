@@ -3,7 +3,7 @@ display_name: Generic JSON
 version: "1.0.0"
 description: "Parses generic JSON-formatted logs, auto-detecting common field names for timestamps, IPs, users, actions, and more"
 category: generic
-vendor: "NanoSIEM"
+vendor: "nano"
 product: "JSON Parser"
 parser_vrl: |
   # Generic JSON parser

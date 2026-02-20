@@ -1,0 +1,97 @@
+name: Validate & Auto-Merge Parsers
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "parsers/**"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  validate-vrl:
+    name: Validate VRL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Vector
+        run: |
+          curl -sSL https://sh.vector.dev | bash -s -- -y --prefix /usr/local
+          echo "/usr/local/bin" >> $GITHUB_PATH
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Find changed parsers
+        id: changed
+        run: |
+          changed=$(git diff --name-only origin/main...HEAD -- 'parsers/*/parser.yaml')
+          if [ -z "$changed" ]; then
+            echo "No parser files changed"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changed parsers:"
+            echo "$changed"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            # Write to file so next step can read it
+            echo "$changed" > /tmp/changed_parsers.txt
+          fi
+
+      - name: Validate VRL syntax
+        if: steps.changed.outputs.has_changes == 'true'
+        run: bash scripts/validate-vrl.sh /tmp/changed_parsers.txt
+
+  auto-merge:
+    name: Auto-Merge
+    needs: validate-vrl
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Enable auto-merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              console.log('No PR context, skipping auto-merge');
+              return;
+            }
+
+            // Only auto-merge if PR author is a collaborator
+            const { data: permLevel } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: pr.user.login,
+            });
+
+            const allowed = ['admin', 'write'];
+            if (!allowed.includes(permLevel.permission)) {
+              console.log(`PR author ${pr.user.login} has '${permLevel.permission}' permission, skipping auto-merge`);
+              return;
+            }
+
+            console.log(`VRL validation passed, approving and merging PR #${pr.number}`);
+
+            // Approve the PR
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              event: 'APPROVE',
+              body: 'VRL validation passed. Auto-approved.',
+            });
+
+            // Merge
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              merge_method: 'squash',
+            });

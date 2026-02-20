@@ -196,7 +196,7 @@ parser_vrl: |
           }
       }
 
-      # --- NanoSIEM Enrichment (if present) ---
+      # --- nano Enrichment (if present) ---
       if exists(parsed."_nanosiem") {
           nano = parsed."_nanosiem"
           if exists(nano.accountAlias) {
