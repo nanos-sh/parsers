@@ -21,8 +21,8 @@ jobs:
 
       - name: Install Vector
         run: |
-          curl -sSL https://sh.vector.dev | bash -s -- -y --prefix /usr/local
-          echo "/usr/local/bin" >> $GITHUB_PATH
+          curl -sSL https://sh.vector.dev | bash -s -- -y --prefix "$HOME/.vector"
+          echo "$HOME/.vector/bin" >> $GITHUB_PATH
 
       - name: Install yq
         run: |
