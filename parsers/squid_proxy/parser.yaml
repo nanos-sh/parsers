@@ -108,9 +108,15 @@ parser_vrl: |
           }
           if url_match.scheme != null {
               scheme = string!(url_match.scheme)
-              if scheme == "https" { .udm.protocol = "HTTPS" }
-              else if scheme == "http" { .udm.protocol = "HTTP" }
-              else if scheme == "ftp" { .udm.protocol = "FTP" }
+              .udm.protocol = if scheme == "https" {
+                  "HTTPS"
+              } else if scheme == "http" {
+                  "HTTP"
+              } else if scheme == "ftp" {
+                  "FTP"
+              } else {
+                  upcase(scheme)
+              }
           }
           if url_match.path != null {
               .udm.uri_path = string!(url_match.path)
