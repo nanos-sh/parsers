@@ -1,0 +1,13 @@
+# NanoSIEM Hobby Tier — Available Models
+#
+# Minimal model catalog for managed hobby deployments.
+# Only includes Gemini models used by the hobby agent_defaults.
+
+models:
+  - model_id: gemini/gemini-3.1-pro-preview
+    display_name: Gemini 3.1 Pro Preview
+    context_window: 1048576
+
+  - model_id: gemini/gemini-3.1-flash-lite-preview
+    display_name: Gemini 3.1 Flash Lite Preview
+    context_window: 1048576

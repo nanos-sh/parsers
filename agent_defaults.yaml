@@ -1,0 +1,33 @@
+# NanoSIEM Hobby Tier — AI Agent Defaults
+#
+# Managed hobby deployments sync from this file via the model catalog system.
+# All agents use Gemini for cost efficiency. Parser creation/editing uses Pro
+# for structured output quality; everything else uses Flash Lite.
+#
+# To update models across all hobby deployments, commit changes here.
+# Instances sync automatically (default: daily, configurable via MODEL_CATALOG_SYNC_INTERVAL_SECS).
+
+providers:
+  google:
+    _default:
+      model_id: gemini/gemini-3.1-flash-lite-preview
+      max_tokens: 2048
+      temperature: 0.7
+    capable:
+      model_id: gemini/gemini-3.1-pro-preview
+      max_tokens: 4096
+      temperature: 0.7
+    fast:
+      model_id: gemini/gemini-3.1-flash-lite-preview
+      max_tokens: 2048
+      temperature: 0.7
+
+# Agent → tier mapping
+# Hobby features: parser-gen, search-query, detection-rules
+# All other agents are disabled at the hobby tier (not listed = uses _default if enabled)
+agents:
+  parser: capable        # parser generation — needs quality structured output
+  parser_edit: capable   # parser editing
+  query: fast            # natural language search
+  detection: fast        # AI detection rule generation
+  summarize: fast        # event summarization (used in search results)
