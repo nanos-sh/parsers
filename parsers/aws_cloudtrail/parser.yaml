@@ -1,6 +1,6 @@
 name: aws_cloudtrail
 display_name: AWS CloudTrail
-version: "1.0.0"
+version: "1.1.0"
 description: "Parses AWS CloudTrail JSON events including API calls, user identity, resources, and error tracking"
 match_values:
   - aws_cloudtrail

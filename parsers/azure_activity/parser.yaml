@@ -1,6 +1,6 @@
 name: azure_activity
 display_name: Azure Activity Log
-version: "1.0.0"
+version: "1.1.0"
 description: "Parses Azure Monitor Activity Logs including operations, status, caller identity, resources, and cloud context"
 match_values:
   - azure_activity

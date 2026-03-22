@@ -1,6 +1,6 @@
 name: f5_waf
 display_name: F5 BIG-IP ASM
-version: "1.0.0"
+version: "1.1.0"
 description: "Parses F5 BIG-IP ASM (Web Application Firewall) logs with attack detection, violations, and security events"
 match_values:
   - f5_waf

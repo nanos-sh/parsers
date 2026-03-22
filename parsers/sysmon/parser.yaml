@@ -1,6 +1,6 @@
 name: sysmon
 display_name: Microsoft Sysmon
-version: "1.0.0"
+version: "1.1.0"
 description: "Parses Windows Sysmon XML events including process creation, network connections, file operations, registry changes, and DNS queries"
 match_values:
   - sysmon
