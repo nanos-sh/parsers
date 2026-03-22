@@ -24,3 +24,4 @@ Import these parsers into nano via **Log Sources > Repositories**. Parsers are i
 1. Create a new directory under `parsers/` with your parser name
 2. Add a `parser.yaml` following the format above
 3. Test your VRL in nano's parser editor before submitting
+
