@@ -1,6 +1,6 @@
 name: infoblox_dhcp
 display_name: Infoblox DHCP
-version: "1.0.0"
+version: "1.2.0"
 description: "Parses Infoblox DHCP logs including DISCOVER, OFFER, REQUEST, ACK, RELEASE, NAK, and INFORM messages"
 category: network
 vendor: "Infoblox"

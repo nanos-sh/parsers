@@ -1,6 +1,6 @@
 name: gcp_audit
 display_name: GCP Audit Log
-version: "1.1.0"
+version: "1.2.0"
 description: "Parses Google Cloud Audit Logs (cloudaudit.googleapis.com) including IAM changes, API calls, resource operations, and authorization details"
 match_values:
   - gcp_audit

@@ -1,6 +1,6 @@
 name: squid_proxy
 display_name: Squid Proxy
-version: "1.0.0"
+version: "1.2.0"
 description: "Parses Squid proxy access logs with cache hit/miss status, URL extraction, and HTTP metadata"
 category: network
 vendor: "Squid Project"
