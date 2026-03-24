@@ -16,7 +16,7 @@ A collection of VRL parsers for nano log source ingestion.
 | [Windows Event Log (XML)](parsers/windows_event_xml) | Microsoft | Native XML | 30+ EventIDs parsed from raw Windows Event XML |
 | [Windows Event Log (Text)](parsers/windows_event_text) | Microsoft | Rendered text | Splunk UF / wevtutil format with section-aware body parsing |
 
-### Network
+### Network & Firewall
 
 | Parser | Vendor | Format | Description |
 |--------|--------|--------|-------------|
@@ -27,14 +27,25 @@ A collection of VRL parsers for nano log source ingestion.
 | [Sophos Firewall](parsers/sophos) | Sophos | key=value syslog | Firewall, content filtering, AV, ATP, IDP, anti-spam, WAF |
 | [Zscaler ZIA](parsers/zscaler_zia) | Zscaler | JSON envelope | Web, firewall, DNS, tunnel, DLP, audit log types |
 | [Broadcom ProxySG](parsers/broadcom_proxy) | Broadcom | ELFF space-delimited | Web proxy access logs with URL reconstruction |
+| [Cloudflare](parsers/cloudflare) | Cloudflare | JSON (Logpush) | HTTP requests, firewall events, DNS logs with WAF/bot scoring |
 | [Infoblox DHCP](parsers/infoblox_dhcp) | Infoblox | Syslog | DISCOVER, OFFER, REQUEST, ACK, RELEASE, NAK, INFORM |
+
+### Network Security Monitoring
+
+| Parser | Vendor | Format | Description |
+|--------|--------|--------|-------------|
+| [Zeek](parsers/zeek) | Zeek Project | JSON | 24 log types: conn, dns, http, ssl, files, notice, smtp, ssh, rdp, intel, weird, and more |
+| [Suricata](parsers/suricata) | OISF | EVE JSON | 24 event types: alert, flow, dns, http, tls, fileinfo, smtp, ssh, anomaly, and more |
 
 ### Cloud
 
 | Parser | Vendor | Format | Description |
 |--------|--------|--------|-------------|
 | [AWS CloudTrail](parsers/aws_cloudtrail) | Amazon | JSON | API calls, user identity, resources, error tracking |
+| [AWS VPC Flow Logs](parsers/aws_vpc_flow) | Amazon | Space-delimited / JSON | VPC network flow logs v2-v5 with protocol mapping |
+| [AWS GuardDuty](parsers/aws_guardduty) | Amazon | JSON | Threat findings: network, IAM, S3, malware detections |
 | [Azure Activity Log](parsers/azure_activity) | Microsoft | JSON | Operations, status, caller identity, resources |
+| [Azure Sign-in Logs](parsers/azure_signin) | Microsoft | JSON | Entra ID sign-ins: interactive, non-interactive, service principal |
 | [GCP Audit Log](parsers/gcp_audit) | Google | JSON | IAM changes, API calls, resource operations, authorization |
 
 ### Security & IAM
@@ -42,6 +53,8 @@ A collection of VRL parsers for nano log source ingestion.
 | Parser | Vendor | Format | Description |
 |--------|--------|--------|-------------|
 | [Okta](parsers/okta) | Okta | JSON | System Log API: auth, MFA, user lifecycle, group, policy events |
+| [Duo Security](parsers/duo) | Cisco | JSON | Authentication, admin actions, MFA with device/geo context |
+| [Auth0](parsers/auth0) | Okta | JSON | 20+ event types: login, signup, MFA, token exchange, management API |
 | [F5 BIG-IP ASM](parsers/f5_waf) | F5 | JSON | Web application firewall: attacks, violations, security events |
 
 ### Application
@@ -49,6 +62,7 @@ A collection of VRL parsers for nano log source ingestion.
 | Parser | Vendor | Format | Description |
 |--------|--------|--------|-------------|
 | [Apache HTTP Server](parsers/apache) | Apache | Combined/common log | Client IP, method, status, bytes, user agent, referrer |
+| [Nginx](parsers/nginx) | Nginx | Combined / JSON / error | Access and error logs with upstream and proxy support |
 | [Squid Proxy](parsers/squid_proxy) | Squid Project | Access log | Cache hit/miss, URL extraction, HTTP metadata |
 
 ### Generic
