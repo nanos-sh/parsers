@@ -59,6 +59,7 @@ A collection of VRL parsers for nano log source ingestion.
 | [Azure Firewall](parsers/azure_firewall) | Microsoft | JSON | Network rules, application rules, threat intel, DNS proxy |
 | [GCP Audit Log](parsers/gcp_audit) | Google | JSON | IAM changes, API calls, resource operations, authorization |
 | [Kubernetes Audit](parsers/kubernetes_audit) | CNCF | JSON | API server audit: resource operations, RBAC, user identity |
+| [Microsoft 365](parsers/microsoft_365) | Microsoft | JSON | Exchange, SharePoint, Azure AD, DLP, Teams audit events |
 
 ### Security & IAM
 
@@ -71,6 +72,13 @@ A collection of VRL parsers for nano log source ingestion.
 | [CyberArk PAM](parsers/cyberark) | CyberArk | CEF syslog | Vault audit, PSM sessions, privileged access events |
 | [Netskope](parsers/netskope) | Netskope | JSON | CASB/SSE: app activity, alerts, DLP, network events |
 | [F5 BIG-IP ASM](parsers/f5_waf) | F5 | JSON | Web application firewall: attacks, violations, security events |
+
+### Vulnerability Management
+
+| Parser | Vendor | Format | Description |
+|--------|--------|--------|-------------|
+| [Qualys](parsers/qualys) | Qualys | JSON | Host detections, knowledge base, WAS findings, compliance |
+| [Rapid7 InsightVM](parsers/rapid7_insightvm) | Rapid7 | JSON | Vulnerability findings, asset data, remediation events |
 
 ### Email Security
 
