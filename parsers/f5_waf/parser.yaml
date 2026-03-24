@@ -78,16 +78,11 @@ parser_vrl: |
   }
 
   if exists(parsed.policy_name) { .ext.policy_name = string!(parsed.policy_name) }
-  if exists(parsed.src_ip) { .udm.src_ip = string!(parsed.src_ip) }
-  else if exists(parsed.client_ip) { .udm.src_ip = string!(parsed.client_ip) }
-  else if exists(parsed.source_ip) { .udm.src_ip = string!(parsed.source_ip) }
-  if exists(parsed.dest_ip) { .udm.dest_ip = string!(parsed.dest_ip) }
-  else if exists(parsed.server_ip) { .udm.dest_ip = string!(parsed.server_ip) }
+  if exists(parsed.src_ip) { .udm.src_ip = string!(parsed.src_ip) } else if exists(parsed.client_ip) { .udm.src_ip = string!(parsed.client_ip) } else if exists(parsed.source_ip) { .udm.src_ip = string!(parsed.source_ip) }
+  if exists(parsed.dest_ip) { .udm.dest_ip = string!(parsed.dest_ip) } else if exists(parsed.server_ip) { .udm.dest_ip = string!(parsed.server_ip) }
   if exists(parsed.dest_port) { port_val = to_int(parsed.dest_port) ?? null; if port_val != null { .udm.dest_port = port_val } }
-  if exists(parsed.method) { .udm.http_method = string!(parsed.method) }
-  else if exists(parsed.http_method) { .udm.http_method = string!(parsed.http_method) }
-  if exists(parsed.uri) { uri = string!(parsed.uri); .udm.uri_path = uri; .udm.url = uri }
-  else if exists(parsed.url) { url = string!(parsed.url); .udm.url = url; .udm.uri_path = url }
+  if exists(parsed.method) { .udm.http_method = string!(parsed.method) } else if exists(parsed.http_method) { .udm.http_method = string!(parsed.http_method) }
+  if exists(parsed.uri) { uri = string!(parsed.uri); .udm.uri_path = uri; .udm.url = uri } else if exists(parsed.url) { url = string!(parsed.url); .udm.url = url; .udm.uri_path = url }
   if exists(parsed.violations) { .ext.violations = string!(parsed.violations) }
   if exists(parsed.severity) { .udm.severity = downcase(string!(parsed.severity)) }
 
@@ -95,25 +90,18 @@ parser_vrl: |
       waf_action = string!(parsed.action)
       .ext.waf_action = waf_action
       if !exists(.udm.action) || .udm.action == "waf_violation" {
-           if contains(downcase(waf_action), "block") { .udm.action = "blocked" }
-           else if contains(downcase(waf_action), "allow") { .udm.action = "allowed" }
-           else if contains(downcase(waf_action), "alert") { .udm.action = "alerted" }
+           if contains(downcase(waf_action), "block") { .udm.action = "blocked" } else if contains(downcase(waf_action), "allow") { .udm.action = "allowed" } else if contains(downcase(waf_action), "alert") { .udm.action = "alerted" }
       }
   }
 
-  if exists(parsed.response_code) { .udm.http_status_code = to_int(parsed.response_code) ?? null }
-  else if exists(parsed.status_code) { .udm.http_status_code = to_int(parsed.status_code) ?? null }
-  if exists(parsed.user_agent) { .udm.http_user_agent = string!(parsed.user_agent) }
-  else if exists(parsed.useragent) { .udm.http_user_agent = string!(parsed.useragent) }
-  if exists(parsed.username) { .udm.user = string!(parsed.username) }
-  else if exists(parsed.user) { .udm.user = string!(parsed.user) }
+  if exists(parsed.response_code) { .udm.http_status_code = to_int(parsed.response_code) ?? null } else if exists(parsed.status_code) { .udm.http_status_code = to_int(parsed.status_code) ?? null }
+  if exists(parsed.user_agent) { .udm.http_user_agent = string!(parsed.user_agent) } else if exists(parsed.useragent) { .udm.http_user_agent = string!(parsed.useragent) }
+  if exists(parsed.username) { .udm.user = string!(parsed.username) } else if exists(parsed.user) { .udm.user = string!(parsed.user) }
   if exists(parsed.session_id) { .udm.session_id = string!(parsed.session_id) }
   if exists(parsed.support_id) { .udm.id = string!(parsed.support_id) }
   if exists(parsed.violation_rating) { .ext.violation_rating = to_int(parsed.violation_rating) ?? null }
-  if exists(parsed.sig_set_names) { .ext.signature_set = string!(parsed.sig_set_names) }
-  else if exists(parsed.signature_set) { .ext.signature_set = string!(parsed.signature_set) }
-  if exists(parsed.threat_campaign_names) { .ext.threat_campaign = string!(parsed.threat_campaign_names) }
-  else if exists(parsed.threat_campaign) { .ext.threat_campaign = string!(parsed.threat_campaign) }
+  if exists(parsed.sig_set_names) { .ext.signature_set = string!(parsed.sig_set_names) } else if exists(parsed.signature_set) { .ext.signature_set = string!(parsed.signature_set) }
+  if exists(parsed.threat_campaign_names) { .ext.threat_campaign = string!(parsed.threat_campaign_names) } else if exists(parsed.threat_campaign) { .ext.threat_campaign = string!(parsed.threat_campaign) }
   if exists(parsed.bot_class) { .ext.bot_class = string!(parsed.bot_class) }
   if exists(parsed.bot_name) { .ext.bot_name = string!(parsed.bot_name) }
   if exists(parsed.param_name) { .ext.param_name = string!(parsed.param_name) }

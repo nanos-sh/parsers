@@ -43,59 +43,38 @@ parser_vrl: |
       }
 
       # --- Network Fields ---
-      if exists(parsed.src_ip) { .udm.src_ip = parsed.src_ip }
-      else if exists(parsed.source_ip) { .udm.src_ip = parsed.source_ip }
-      else if exists(parsed.client_ip) { .udm.src_ip = parsed.client_ip }
+      if exists(parsed.src_ip) { .udm.src_ip = parsed.src_ip } else if exists(parsed.source_ip) { .udm.src_ip = parsed.source_ip } else if exists(parsed.client_ip) { .udm.src_ip = parsed.client_ip }
 
-      if exists(parsed.dest_ip) { .udm.dest_ip = parsed.dest_ip }
-      else if exists(parsed.destination_ip) { .udm.dest_ip = parsed.destination_ip }
-      else if exists(parsed.server_ip) { .udm.dest_ip = parsed.server_ip }
-      else if exists(parsed.target_ip) { .udm.dest_ip = parsed.target_ip }
+      if exists(parsed.dest_ip) { .udm.dest_ip = parsed.dest_ip } else if exists(parsed.destination_ip) { .udm.dest_ip = parsed.destination_ip } else if exists(parsed.server_ip) { .udm.dest_ip = parsed.server_ip } else if exists(parsed.target_ip) { .udm.dest_ip = parsed.target_ip }
 
       if exists(parsed.src_port) { .udm.src_port = to_int(parsed.src_port) ?? 0 }
       if exists(parsed.dest_port) { .udm.dest_port = to_int(parsed.dest_port) ?? 0 }
       if exists(parsed.protocol) { .udm.protocol = parsed.protocol }
 
       # --- User Fields ---
-      if exists(parsed.user) { .udm.user = parsed.user }
-      else if exists(parsed.username) { .udm.user = parsed.username }
-      else if exists(parsed.user_name) { .udm.user = parsed.user_name }
-      else if exists(parsed.src_user) { .udm.src_user = parsed.src_user }
+      if exists(parsed.user) { .udm.user = parsed.user } else if exists(parsed.username) { .udm.user = parsed.username } else if exists(parsed.user_name) { .udm.user = parsed.user_name } else if exists(parsed.src_user) { .udm.src_user = parsed.src_user }
 
-      if exists(parsed.dest_user) { .udm.dest_user = parsed.dest_user }
-      else if exists(parsed.target_user) { .udm.dest_user = parsed.target_user }
+      if exists(parsed.dest_user) { .udm.dest_user = parsed.dest_user } else if exists(parsed.target_user) { .udm.dest_user = parsed.target_user }
 
       # --- Action & Severity ---
-      if exists(parsed.action) { .udm.action = parsed.action }
-      else if exists(parsed.event_action) { .udm.action = parsed.event_action }
-      else if exists(parsed.activity) { .udm.action = parsed.activity }
+      if exists(parsed.action) { .udm.action = parsed.action } else if exists(parsed.event_action) { .udm.action = parsed.event_action } else if exists(parsed.activity) { .udm.action = parsed.activity }
 
-      if exists(parsed.severity) { .udm.severity = parsed.severity }
-      else if exists(parsed.level) { .udm.severity = parsed.level }
-      else if exists(parsed.log_level) { .udm.severity = parsed.log_level }
+      if exists(parsed.severity) { .udm.severity = parsed.severity } else if exists(parsed.level) { .udm.severity = parsed.level } else if exists(parsed.log_level) { .udm.severity = parsed.log_level }
 
       # --- Host/Device Fields ---
-      if exists(parsed.host) { .udm.src_host = parsed.host }
-      else if exists(parsed.hostname) { .udm.src_host = parsed.hostname }
+      if exists(parsed.host) { .udm.src_host = parsed.host } else if exists(parsed.hostname) { .udm.src_host = parsed.hostname }
 
-      if exists(parsed.dvc) { .udm.dvc = parsed.dvc }
-      else if exists(parsed.device) { .udm.dvc = parsed.device }
+      if exists(parsed.dvc) { .udm.dvc = parsed.dvc } else if exists(parsed.device) { .udm.dvc = parsed.device }
 
       # --- Process Fields ---
-      if exists(parsed.process) { .udm.process = parsed.process }
-      else if exists(parsed.command_line) { .udm.process = parsed.command_line }
-      else if exists(parsed.cmdline) { .udm.process = parsed.cmdline }
+      if exists(parsed.process) { .udm.process = parsed.process } else if exists(parsed.command_line) { .udm.process = parsed.command_line } else if exists(parsed.cmdline) { .udm.process = parsed.cmdline }
 
-      if exists(parsed.process_name) { .udm.process_name = parsed.process_name }
-      else if exists(parsed.image) { .udm.process_name = parsed.image }
+      if exists(parsed.process_name) { .udm.process_name = parsed.process_name } else if exists(parsed.image) { .udm.process_name = parsed.image }
 
-      if exists(parsed.pid) { .udm.process_id = to_int(parsed.pid) ?? 0 }
-      else if exists(parsed.process_id) { .udm.process_id = to_int(parsed.process_id) ?? 0 }
+      if exists(parsed.pid) { .udm.process_id = to_int(parsed.pid) ?? 0 } else if exists(parsed.process_id) { .udm.process_id = to_int(parsed.process_id) ?? 0 }
 
       # --- Web/URL Fields ---
-      if exists(parsed.url) { .udm.url = parsed.url }
-      else if exists(parsed.uri) { .udm.url = parsed.uri }
-      else if exists(parsed.request_url) { .udm.url = parsed.request_url }
+      if exists(parsed.url) { .udm.url = parsed.url } else if exists(parsed.uri) { .udm.url = parsed.uri } else if exists(parsed.request_url) { .udm.url = parsed.request_url }
 
       if exists(parsed.domain) { .udm.url_domain = parsed.domain }
       if exists(parsed.method) { .udm.http_method = parsed.method }

@@ -1,0 +1,823 @@
+name: windows_event
+display_name: Windows Event Log
+version: "1.0.0"
+description: "Parses Windows Event Logs from Winlogbeat JSON and NXLog JSON formats. Covers Security, System, and Application channels with specific field extraction for logon (4624/4625), process creation (4688), service install (4697/7045), Kerberos (4768/4769/4771), account management (4720-4726), group changes (4728/4732/4756), share access (5140/5145), audit log cleared (1102), and more."
+match_values:
+  - windows_event
+  - winlogbeat
+  - windows
+  - win_event
+  - winevent
+category: endpoint
+vendor: "Microsoft"
+product: "Windows"
+parser_vrl: |
+  # Windows Event Log Parser
+  # Supports: Winlogbeat JSON (winlog.event_id) and NXLog flattened JSON (EventID)
+  .udm = {}
+  .ext = {}
+  .metadata = {}
+
+  raw_log = string!(.message)
+  parsed, err = parse_json(raw_log)
+
+  if err == null {
+      # ---------------------------------------------------------------
+      # Detect format: Winlogbeat vs NXLog
+      # ---------------------------------------------------------------
+      is_winlogbeat = exists(parsed.winlog)
+
+      event_id = 0
+      event_data = {}
+      computer_name = ""
+      channel = ""
+      provider_name = ""
+
+      if is_winlogbeat {
+          # --- Winlogbeat format ---
+          winlog = object!(parsed.winlog)
+
+          event_id = to_int(winlog.event_id) ?? 0
+          # Fallback: some versions put it under event.code
+          if event_id == 0 {
+              if exists(parsed.event) {
+                  event_id = to_int(object!(parsed.event).code) ?? 0
+              }
+          }
+
+          if exists(winlog.event_data) {
+              event_data = object!(winlog.event_data)
+          }
+
+          computer_name = string(winlog.computer_name) ?? ""
+          channel = string(winlog.channel) ?? ""
+          provider_name = string(winlog.provider_name) ?? ""
+
+          # Timestamp from @timestamp (ISO8601)
+          if exists(parsed."@timestamp") {
+              ts, ts_err = parse_timestamp(string!(parsed."@timestamp"), "%+")
+              if ts_err == null {
+                  .udm.timestamp = ts
+              }
+          }
+
+          # Agent hostname as fallback src_host
+          if exists(parsed.agent) {
+              agent = object!(parsed.agent)
+              if exists(agent.hostname) {
+                  .ext.agent_hostname = string!(agent.hostname)
+              }
+          }
+
+          # Winlog process info (the logging process, not the event subject)
+          if exists(winlog.process) {
+              wl_proc = object!(winlog.process)
+              if exists(wl_proc.pid) {
+                  .ext.winlog_process_pid = to_int(wl_proc.pid) ?? null
+              }
+          }
+
+          # Record ID
+          if exists(winlog.record_id) {
+              .ext.record_id = to_int(winlog.record_id) ?? null
+          }
+
+      } else {
+          # --- NXLog flattened format ---
+          event_id = to_int(parsed.EventID) ?? 0
+
+          computer_name = string(parsed.Hostname) ?? ""
+          channel = string(parsed.Channel) ?? ""
+          provider_name = string(parsed.SourceName) ?? ""
+
+          # NXLog timestamp
+          if exists(parsed.EventTime) {
+              ts, ts_err = parse_timestamp(string!(parsed.EventTime), "%Y-%m-%d %H:%M:%S")
+              if ts_err == null {
+                  .udm.timestamp = ts
+              }
+          }
+
+          # For NXLog, the entire parsed object acts as event_data
+          event_data = parsed
+      }
+
+      # ---------------------------------------------------------------
+      # Common fields
+      # ---------------------------------------------------------------
+      .udm.signature_id = to_string(event_id)
+      .metadata.event_id = event_id
+      .udm.src_host = computer_name
+      .ext.channel = channel
+      .ext.provider = provider_name
+
+      if !exists(.udm.timestamp) {
+          .udm.timestamp = now()
+      }
+
+      .udm.vendor = "Microsoft"
+      .udm.product = "Windows"
+
+      # ---------------------------------------------------------------
+      # Helper: extract filename from full Windows path
+      # (used repeatedly below)
+      # ---------------------------------------------------------------
+
+      # ---------------------------------------------------------------
+      # LogonType mapping helper
+      # ---------------------------------------------------------------
+      logon_type_str = string(event_data.LogonType) ?? ""
+      logon_type_name = if logon_type_str == "2" { "Interactive" } else if logon_type_str == "3" { "Network" } else if logon_type_str == "4" { "Batch" } else if logon_type_str == "5" { "Service" } else if logon_type_str == "7" { "Unlock" } else if logon_type_str == "8" { "NetworkCleartext" } else if logon_type_str == "9" { "NewCredentials" } else if logon_type_str == "10" { "RemoteInteractive" } else if logon_type_str == "11" { "CachedInteractive" } else { null }
+
+      # ---------------------------------------------------------------
+      # Event-specific field extraction
+      # ---------------------------------------------------------------
+
+      # === 4624 - Successful Logon ===
+      if event_id == 4624 {
+          .udm.action = "logon_success"
+          .udm.category = "authentication"
+          .udm.auth_result = "success"
+          .udm.user = string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetUserSid) ?? null
+          .udm.session_id = string(event_data.TargetLogonId) ?? null
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+          .ext.subject_logon_id = string(event_data.SubjectLogonId) ?? null
+          .ext.subject_user_sid = string(event_data.SubjectUserSid) ?? null
+
+          if logon_type_name != null {
+              .udm.auth_type = logon_type_name
+          }
+          .ext.logon_type = logon_type_str
+
+          ip_addr = string(event_data.IpAddress) ?? ""
+          if ip_addr != "" && ip_addr != "-" {
+              .udm.src_ip = ip_addr
+          }
+          ip_port = string(event_data.IpPort) ?? ""
+          if ip_port != "" && ip_port != "0" {
+              .udm.src_port = to_int(ip_port) ?? null
+          }
+
+          .ext.logon_process = string(event_data.LogonProcessName) ?? null
+          .udm.authentication_method = string(event_data.AuthenticationPackageName) ?? null
+          .ext.workstation_name = string(event_data.WorkstationName) ?? null
+          .ext.logon_guid = string(event_data.LogonGuid) ?? null
+          .ext.transmitted_services = string(event_data.TransmittedServices) ?? null
+          .ext.lm_package_name = string(event_data.LmPackageName) ?? null
+          .ext.key_length = string(event_data.KeyLength) ?? null
+          .ext.impersonation_level = string(event_data.ImpersonationLevel) ?? null
+          .ext.elevated_token = string(event_data.ElevatedToken) ?? null
+      }
+
+      # === 4625 - Failed Logon ===
+      if event_id == 4625 {
+          .udm.action = "logon_failure"
+          .udm.category = "authentication"
+          .udm.auth_result = "failure"
+          .udm.user = string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.TargetDomainName) ?? null
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+
+          if logon_type_name != null {
+              .udm.auth_type = logon_type_name
+          }
+          .ext.logon_type = logon_type_str
+
+          ip_addr = string(event_data.IpAddress) ?? ""
+          if ip_addr != "" && ip_addr != "-" {
+              .udm.src_ip = ip_addr
+          }
+          ip_port = string(event_data.IpPort) ?? ""
+          if ip_port != "" && ip_port != "0" {
+              .udm.src_port = to_int(ip_port) ?? null
+          }
+
+          .ext.logon_process = string(event_data.LogonProcessName) ?? null
+          .udm.authentication_method = string(event_data.AuthenticationPackageName) ?? null
+          .ext.workstation_name = string(event_data.WorkstationName) ?? null
+          .ext.failure_reason_code = string(event_data.FailureReason) ?? null
+
+          # Map Status/SubStatus to human-readable failure reasons
+          status_code = downcase(string(event_data.Status) ?? "")
+          sub_status_code = downcase(string(event_data.SubStatus) ?? "")
+          .ext.status = status_code
+          .ext.sub_status = sub_status_code
+
+          failure_reason = if sub_status_code == "0xc000006a" { "wrong_password" } else if sub_status_code == "0xc0000064" { "no_such_user" } else if sub_status_code == "0xc0000234" { "account_locked" } else if sub_status_code == "0xc0000072" { "account_disabled" } else if sub_status_code == "0xc000006d" { "bad_password" } else if sub_status_code == "0xc000006e" { "restricted_logon" } else if sub_status_code == "0xc000006f" { "outside_logon_hours" } else if sub_status_code == "0xc0000070" { "unauthorized_workstation" } else if sub_status_code == "0xc0000071" { "password_expired" } else if sub_status_code == "0xc0000133" { "clock_skew" } else if sub_status_code == "0xc0000224" { "password_change_required" } else if status_code == "0xc000006d" { "bad_password" } else if status_code == "0xc0000064" { "no_such_user" } else if status_code == "0xc0000234" { "account_locked" } else if status_code == "0xc0000072" { "account_disabled" } else { null }
+
+          if failure_reason != null {
+              .udm.result = failure_reason
+              .ext.failure_reason = failure_reason
+          }
+      }
+
+      # === 4634/4647 - Logoff ===
+      if event_id == 4634 || event_id == 4647 {
+          .udm.action = "logoff"
+          .udm.category = "authentication"
+          .udm.user = string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetUserSid) ?? null
+          .udm.session_id = string(event_data.TargetLogonId) ?? null
+          .ext.logon_type = logon_type_str
+      }
+
+      # === 4648 - Explicit Credentials ===
+      if event_id == 4648 {
+          .udm.action = "explicit_credentials"
+          .udm.category = "authentication"
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.dest_nt_domain = string(event_data.TargetDomainName) ?? null
+          .ext.target_server_name = string(event_data.TargetServerName) ?? null
+          .ext.target_info = string(event_data.TargetInfo) ?? null
+          .ext.subject_logon_id = string(event_data.SubjectLogonId) ?? null
+
+          process_name_full = string(event_data.ProcessName) ?? ""
+          if process_name_full != "" && process_name_full != "-" {
+              .udm.process_path = process_name_full
+              parts = split(process_name_full, "\\")
+              if length(parts) > 0 {
+                  .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
+
+          ip_addr = string(event_data.IpAddress) ?? ""
+          if ip_addr != "" && ip_addr != "-" {
+              .udm.src_ip = ip_addr
+          }
+          ip_port = string(event_data.IpPort) ?? ""
+          if ip_port != "" && ip_port != "0" {
+              .udm.src_port = to_int(ip_port) ?? null
+          }
+      }
+
+      # === 4672 - Special Privileges Assigned ===
+      if event_id == 4672 {
+          .udm.action = "special_privileges_assigned"
+          .udm.category = "authorization"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.user_id = string(event_data.SubjectUserSid) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .ext.privileges = string(event_data.PrivilegeList) ?? null
+      }
+
+      # === 4688 - Process Creation ===
+      if event_id == 4688 {
+          .udm.action = "process_create"
+          .udm.category = "process"
+
+          new_process = string(event_data.NewProcessName) ?? ""
+          if new_process != "" {
+              .udm.process_path = new_process
+              parts = split(new_process, "\\")
+              if length(parts) > 0 {
+                  .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
+
+          .udm.process = string(event_data.CommandLine) ?? null
+
+          parent_process = string(event_data.ParentProcessName) ?? ""
+          if parent_process != "" {
+              .udm.parent_process_path = parent_process
+              .udm.parent_process = parent_process
+              parts = split(parent_process, "\\")
+              if length(parts) > 0 {
+                  .udm.parent_process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
+
+          .udm.user = string(event_data.SubjectUserName) ?? string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.SubjectUserSid) ?? string(event_data.TargetUserSid) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? string(event_data.TargetLogonId) ?? null
+
+          # Process IDs - handle hex format (0x1234)
+          new_pid_str = string(event_data.NewProcessId) ?? ""
+          if new_pid_str != "" {
+              .udm.process_id = to_int(new_pid_str) ?? null
+          }
+
+          parent_pid_str = string(event_data.ProcessId) ?? ""
+          if parent_pid_str != "" {
+              .udm.parent_process_id = to_int(parent_pid_str) ?? null
+          }
+
+          .ext.token_elevation_type = string(event_data.TokenElevationType) ?? null
+          .ext.mandatory_label = string(event_data.MandatoryLabel) ?? null
+
+          # Map MandatoryLabel SID to integrity level
+          mandatory_label = string(event_data.MandatoryLabel) ?? ""
+          .udm.process_integrity_level = if mandatory_label == "S-1-16-0" { "Untrusted" } else if mandatory_label == "S-1-16-4096" { "Low" } else if mandatory_label == "S-1-16-8192" { "Medium" } else if mandatory_label == "S-1-16-8448" { "MediumPlus" } else if mandatory_label == "S-1-16-12288" { "High" } else if mandatory_label == "S-1-16-16384" { "System" } else { null }
+      }
+
+      # === 4689 - Process Termination ===
+      if event_id == 4689 {
+          .udm.action = "process_terminate"
+          .udm.category = "process"
+          process_name_full = string(event_data.ProcessName) ?? ""
+          if process_name_full != "" {
+              .udm.process_path = process_name_full
+              parts = split(process_name_full, "\\")
+              if length(parts) > 0 {
+                  .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .udm.status = string(event_data.Status) ?? null
+
+          pid_str = string(event_data.ProcessId) ?? ""
+          if pid_str != "" {
+              .udm.process_id = to_int(pid_str) ?? null
+          }
+      }
+
+      # === 4697 - Service Installed (Security log) ===
+      if event_id == 4697 {
+          .udm.action = "service_installed"
+          .udm.category = "service"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.user_id = string(event_data.SubjectUserSid) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .udm.service_name = string(event_data.ServiceName) ?? null
+          .udm.service_path = string(event_data.ServiceFileName) ?? null
+          .ext.service_type = string(event_data.ServiceType) ?? null
+          .ext.service_start_type = string(event_data.ServiceStartType) ?? null
+          .ext.service_account = string(event_data.ServiceAccount) ?? null
+      }
+
+      # === 7045 - Service Installed (System log) ===
+      if event_id == 7045 {
+          .udm.action = "service_installed"
+          .udm.category = "service"
+          .udm.service_name = string(event_data.ServiceName) ?? null
+          .udm.service_path = string(event_data.ImagePath) ?? null
+          .ext.service_type = string(event_data.ServiceType) ?? null
+          .ext.service_start_type = string(event_data.StartType) ?? null
+          .ext.service_account = string(event_data.AccountName) ?? null
+      }
+
+      # === 4720 - User Account Created ===
+      if event_id == 4720 {
+          .udm.action = "account_created"
+          .udm.category = "account_management"
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.dest_nt_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetSid) ?? null
+          .ext.subject_logon_id = string(event_data.SubjectLogonId) ?? null
+          .ext.sam_account_name = string(event_data.SamAccountName) ?? null
+          .ext.display_name = string(event_data.DisplayName) ?? null
+          .ext.user_principal_name = string(event_data.UserPrincipalName) ?? null
+          .ext.primary_group_id = string(event_data.PrimaryGroupId) ?? null
+          .ext.password_last_set = string(event_data.PasswordLastSet) ?? null
+          .ext.account_expires = string(event_data.AccountExpires) ?? null
+          .ext.user_account_control = string(event_data.UserAccountControl) ?? null
+      }
+
+      # === 4722 - User Account Enabled ===
+      if event_id == 4722 {
+          .udm.action = "account_enabled"
+          .udm.category = "account_management"
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.dest_nt_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetSid) ?? null
+      }
+
+      # === 4723 - Password Change Attempt ===
+      if event_id == 4723 {
+          .udm.action = "password_change_attempt"
+          .udm.category = "account_management"
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.dest_nt_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetSid) ?? null
+      }
+
+      # === 4724 - Password Reset ===
+      if event_id == 4724 {
+          .udm.action = "password_reset"
+          .udm.category = "account_management"
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.dest_nt_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetSid) ?? null
+      }
+
+      # === 4725 - User Account Disabled ===
+      if event_id == 4725 {
+          .udm.action = "account_disabled"
+          .udm.category = "account_management"
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.dest_nt_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetSid) ?? null
+      }
+
+      # === 4726 - User Account Deleted ===
+      if event_id == 4726 {
+          .udm.action = "account_deleted"
+          .udm.category = "account_management"
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.dest_nt_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetSid) ?? null
+      }
+
+      # === 4728/4732/4756 - Group Membership Changes ===
+      # 4728 = member added to global group
+      # 4732 = member added to local group
+      # 4756 = member added to universal group
+      if event_id == 4728 || event_id == 4732 || event_id == 4756 {
+          .udm.action = if event_id == 4728 { "member_added_global_group" } else if event_id == 4732 { "member_added_local_group" } else { "member_added_universal_group" }
+          .udm.category = "account_management"
+          .udm.user = string(event_data.MemberName) ?? string(event_data.MemberSid) ?? null
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+          .ext.group_name = string(event_data.TargetUserName) ?? null
+          .ext.group_domain = string(event_data.TargetDomainName) ?? null
+          .ext.group_sid = string(event_data.TargetSid) ?? null
+          .ext.member_sid = string(event_data.MemberSid) ?? null
+          .ext.subject_logon_id = string(event_data.SubjectLogonId) ?? null
+      }
+
+      # === 4729/4733/4757 - Group Membership Removed ===
+      if event_id == 4729 || event_id == 4733 || event_id == 4757 {
+          .udm.action = if event_id == 4729 { "member_removed_global_group" } else if event_id == 4733 { "member_removed_local_group" } else { "member_removed_universal_group" }
+          .udm.category = "account_management"
+          .udm.user = string(event_data.MemberName) ?? string(event_data.MemberSid) ?? null
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+          .ext.group_name = string(event_data.TargetUserName) ?? null
+          .ext.group_domain = string(event_data.TargetDomainName) ?? null
+          .ext.group_sid = string(event_data.TargetSid) ?? null
+          .ext.member_sid = string(event_data.MemberSid) ?? null
+      }
+
+      # === 4768 - Kerberos TGT Request (AS-REQ) ===
+      if event_id == 4768 {
+          .udm.action = "kerberos_tgt_request"
+          .udm.category = "authentication"
+          .udm.auth_type = "Kerberos"
+          .udm.user = string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetSid) ?? null
+
+          status_4768 = downcase(string(event_data.Status) ?? "")
+          .udm.auth_result = if status_4768 == "0x0" { "success" } else { "failure" }
+          .ext.status = status_4768
+
+          .ext.service_name = string(event_data.ServiceName) ?? null
+          .ext.service_sid = string(event_data.ServiceSid) ?? null
+          .ext.ticket_options = string(event_data.TicketOptions) ?? null
+          .ext.pre_auth_type = string(event_data.PreAuthType) ?? null
+
+          # Ticket encryption type mapping
+          enc_type = downcase(string(event_data.TicketEncryptionType) ?? "")
+          .ext.ticket_encryption_type_raw = enc_type
+          .ext.ticket_encryption = if enc_type == "0x17" { "RC4-HMAC (potentially Kerberoasting)" } else if enc_type == "0x12" { "AES256" } else if enc_type == "0x11" { "AES128" } else if enc_type == "0x18" { "RC4-HMAC-EXP" } else if enc_type == "0x3" { "DES-CBC-MD5" } else if enc_type == "0x1" { "DES-CBC-CRC" } else { enc_type }
+
+          ip_addr = string(event_data.IpAddress) ?? ""
+          # Strip ::ffff: prefix for IPv4-mapped IPv6 addresses
+          if starts_with(ip_addr, "::ffff:") {
+              ip_addr = slice!(ip_addr, 7)
+          }
+          if ip_addr != "" && ip_addr != "-" {
+              .udm.src_ip = ip_addr
+          }
+          ip_port = string(event_data.IpPort) ?? ""
+          if ip_port != "" && ip_port != "0" {
+              .udm.src_port = to_int(ip_port) ?? null
+          }
+
+          .ext.cert_issuer_name = string(event_data.CertIssuerName) ?? null
+          .ext.cert_serial_number = string(event_data.CertSerialNumber) ?? null
+          .ext.cert_thumbprint = string(event_data.CertThumbprint) ?? null
+      }
+
+      # === 4769 - Kerberos Service Ticket (TGS-REQ) ===
+      if event_id == 4769 {
+          .udm.action = "kerberos_service_ticket"
+          .udm.category = "authentication"
+          .udm.auth_type = "Kerberos"
+          .udm.user = string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.TargetDomainName) ?? null
+
+          status_4769 = downcase(string(event_data.Status) ?? "")
+          .udm.auth_result = if status_4769 == "0x0" { "success" } else { "failure" }
+          .ext.status = status_4769
+
+          .ext.service_name = string(event_data.ServiceName) ?? null
+          .ext.service_sid = string(event_data.ServiceSid) ?? null
+          .ext.ticket_options = string(event_data.TicketOptions) ?? null
+          .ext.logon_guid = string(event_data.LogonGuid) ?? null
+          .ext.transmitted_services = string(event_data.TransmittedServices) ?? null
+
+          enc_type = downcase(string(event_data.TicketEncryptionType) ?? "")
+          .ext.ticket_encryption_type_raw = enc_type
+          .ext.ticket_encryption = if enc_type == "0x17" { "RC4-HMAC (potentially Kerberoasting)" } else if enc_type == "0x12" { "AES256" } else if enc_type == "0x11" { "AES128" } else if enc_type == "0x18" { "RC4-HMAC-EXP" } else if enc_type == "0x3" { "DES-CBC-MD5" } else if enc_type == "0x1" { "DES-CBC-CRC" } else { enc_type }
+
+          ip_addr = string(event_data.IpAddress) ?? ""
+          if starts_with(ip_addr, "::ffff:") {
+              ip_addr = slice!(ip_addr, 7)
+          }
+          if ip_addr != "" && ip_addr != "-" {
+              .udm.src_ip = ip_addr
+          }
+          ip_port = string(event_data.IpPort) ?? ""
+          if ip_port != "" && ip_port != "0" {
+              .udm.src_port = to_int(ip_port) ?? null
+          }
+      }
+
+      # === 4771 - Kerberos Pre-Auth Failed ===
+      if event_id == 4771 {
+          .udm.action = "kerberos_preauth_failed"
+          .udm.category = "authentication"
+          .udm.auth_type = "Kerberos"
+          .udm.auth_result = "failure"
+          .udm.user = string(event_data.TargetUserName) ?? null
+          .udm.user_id = string(event_data.TargetSid) ?? null
+          .ext.service_name = string(event_data.ServiceName) ?? null
+          .ext.status = downcase(string(event_data.Status) ?? "")
+          .ext.ticket_options = string(event_data.TicketOptions) ?? null
+          .ext.pre_auth_type = string(event_data.PreAuthType) ?? null
+
+          # Map 4771 failure codes
+          status_4771 = downcase(string(event_data.Status) ?? "")
+          .ext.failure_reason = if status_4771 == "0x6" { "client_not_found" } else if status_4771 == "0x12" { "credentials_revoked" } else if status_4771 == "0x17" { "password_expired" } else if status_4771 == "0x18" { "wrong_password" } else if status_4771 == "0x25" { "clock_skew" } else { null }
+
+          enc_type = downcase(string(event_data.TicketEncryptionType) ?? "")
+          .ext.ticket_encryption_type_raw = enc_type
+          .ext.ticket_encryption = if enc_type == "0x17" { "RC4-HMAC (potentially Kerberoasting)" } else if enc_type == "0x12" { "AES256" } else if enc_type == "0x11" { "AES128" } else { enc_type }
+
+          ip_addr = string(event_data.IpAddress) ?? ""
+          if starts_with(ip_addr, "::ffff:") {
+              ip_addr = slice!(ip_addr, 7)
+          }
+          if ip_addr != "" && ip_addr != "-" {
+              .udm.src_ip = ip_addr
+          }
+          ip_port = string(event_data.IpPort) ?? ""
+          if ip_port != "" && ip_port != "0" {
+              .udm.src_port = to_int(ip_port) ?? null
+          }
+      }
+
+      # === 4776 - NTLM Authentication ===
+      if event_id == 4776 {
+          .udm.action = "ntlm_authentication"
+          .udm.category = "authentication"
+          .udm.auth_type = "NTLM"
+          .udm.user = string(event_data.TargetUserName) ?? null
+          .ext.authenticating_package = string(event_data.AuthenticationPackageName) ?? null
+          .ext.workstation_name = string(event_data.Workstation) ?? null
+
+          status_4776 = downcase(string(event_data.Status) ?? "")
+          .udm.auth_result = if status_4776 == "0x0" { "success" } else { "failure" }
+          .ext.status = status_4776
+      }
+
+      # === 5140 - Network Share Accessed ===
+      if event_id == 5140 {
+          .udm.action = "share_access"
+          .udm.category = "file_access"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.user_id = string(event_data.SubjectUserSid) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .ext.share_name = string(event_data.ShareName) ?? null
+          .ext.share_local_path = string(event_data.ShareLocalPath) ?? null
+          .ext.access_mask = string(event_data.AccessMask) ?? null
+          .ext.access_list = string(event_data.AccessList) ?? null
+
+          ip_addr = string(event_data.IpAddress) ?? ""
+          if ip_addr != "" && ip_addr != "-" {
+              .udm.src_ip = ip_addr
+          }
+          ip_port = string(event_data.IpPort) ?? ""
+          if ip_port != "" && ip_port != "0" {
+              .udm.src_port = to_int(ip_port) ?? null
+          }
+      }
+
+      # === 5145 - Network Share Object Checked ===
+      if event_id == 5145 {
+          .udm.action = "share_object_access"
+          .udm.category = "file_access"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.user_id = string(event_data.SubjectUserSid) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .ext.share_name = string(event_data.ShareName) ?? null
+          .udm.file_path = string(event_data.RelativeTargetName) ?? null
+          .ext.access_mask = string(event_data.AccessMask) ?? null
+          .ext.access_list = string(event_data.AccessList) ?? null
+
+          # Extract file_name from RelativeTargetName
+          rel_path = string(event_data.RelativeTargetName) ?? ""
+          if rel_path != "" {
+              parts = split(rel_path, "\\")
+              if length(parts) > 0 {
+                  .udm.file_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
+
+          ip_addr = string(event_data.IpAddress) ?? ""
+          if ip_addr != "" && ip_addr != "-" {
+              .udm.src_ip = ip_addr
+          }
+          ip_port = string(event_data.IpPort) ?? ""
+          if ip_port != "" && ip_port != "0" {
+              .udm.src_port = to_int(ip_port) ?? null
+          }
+      }
+
+      # === 1102 - Audit Log Cleared ===
+      if event_id == 1102 {
+          .udm.action = "audit_log_cleared"
+          .udm.category = "audit"
+          .udm.severity = "high"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.user_id = string(event_data.SubjectUserSid) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+      }
+
+      # === 4740 - Account Locked Out ===
+      if event_id == 4740 {
+          .udm.action = "account_locked"
+          .udm.category = "account_management"
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetSid) ?? null
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .ext.caller_computer_name = string(event_data.CallerComputerName) ?? null
+      }
+
+      # === 4767 - Account Unlocked ===
+      if event_id == 4767 {
+          .udm.action = "account_unlocked"
+          .udm.category = "account_management"
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetSid) ?? null
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+      }
+
+      # === 4663 - Object Access Attempt ===
+      if event_id == 4663 {
+          .udm.action = "object_access"
+          .udm.category = "file_access"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .udm.file_path = string(event_data.ObjectName) ?? null
+          .ext.object_type = string(event_data.ObjectType) ?? null
+          .ext.access_mask = string(event_data.AccessMask) ?? null
+          .ext.handle_id = string(event_data.HandleId) ?? null
+          .ext.resource_attributes = string(event_data.ResourceAttributes) ?? null
+
+          process_name_full = string(event_data.ProcessName) ?? ""
+          if process_name_full != "" {
+              .udm.process_path = process_name_full
+              parts = split(process_name_full, "\\")
+              if length(parts) > 0 {
+                  .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
+      }
+
+      # === 4657 - Registry Value Modified ===
+      if event_id == 4657 {
+          .udm.action = "registry_value_modified"
+          .udm.category = "registry"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .udm.registry_path = string(event_data.ObjectName) ?? null
+          .udm.registry_value_name = string(event_data.ObjectValueName) ?? null
+          .udm.registry_value_data = string(event_data.NewValue) ?? null
+          .ext.old_value = string(event_data.OldValue) ?? null
+          .ext.old_value_type = string(event_data.OldValueType) ?? null
+          .ext.new_value_type = string(event_data.NewValueType) ?? null
+          .ext.operation_type = string(event_data.OperationType) ?? null
+
+          process_name_full = string(event_data.ProcessName) ?? ""
+          if process_name_full != "" {
+              .udm.process_path = process_name_full
+              parts = split(process_name_full, "\\")
+              if length(parts) > 0 {
+                  .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
+      }
+
+      # === 4698/4699/4700/4701/4702 - Scheduled Task Events ===
+      if event_id == 4698 || event_id == 4699 || event_id == 4700 || event_id == 4701 || event_id == 4702 {
+          .udm.action = if event_id == 4698 { "scheduled_task_created" } else if event_id == 4699 { "scheduled_task_deleted" } else if event_id == 4700 { "scheduled_task_enabled" } else if event_id == 4701 { "scheduled_task_disabled" } else { "scheduled_task_updated" }
+          .udm.category = "scheduled_task"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .ext.task_name = string(event_data.TaskName) ?? null
+          .ext.task_content = string(event_data.TaskContent) ?? null
+      }
+
+      # === 4946/4947/4948/4950 - Windows Firewall Rule Changes ===
+      if event_id == 4946 || event_id == 4947 || event_id == 4948 || event_id == 4950 {
+          .udm.action = if event_id == 4946 { "firewall_rule_added" } else if event_id == 4947 { "firewall_rule_modified" } else if event_id == 4948 { "firewall_rule_deleted" } else { "firewall_settings_changed" }
+          .udm.category = "firewall"
+          .udm.rule_name = string(event_data.RuleName) ?? null
+          .ext.rule_id = string(event_data.RuleId) ?? null
+          .ext.rule_attr_value = string(event_data.RuleAttr) ?? null
+          .ext.profile = string(event_data.ProfileChanged) ?? null
+      }
+
+      # === NXLog-specific extra fields ===
+      if !is_winlogbeat {
+          if exists(parsed.EventType) {
+              .ext.event_type = string!(parsed.EventType)
+          }
+          if exists(parsed.Message) && !exists(.ext.original_message) {
+              .ext.original_message = string!(parsed.Message)
+          }
+          if exists(parsed.AccountType) {
+              .udm.user_type = string!(parsed.AccountType)
+          }
+          # NXLog may provide SourceAddress directly
+          if exists(parsed.SourceAddress) {
+              src = string!(parsed.SourceAddress)
+              if src != "" && src != "-" {
+                  .udm.src_ip = src
+              }
+          }
+          # NXLog may provide AccountName
+          if exists(parsed.AccountName) && !exists(.udm.user) {
+              .udm.user = string!(parsed.AccountName)
+          }
+          if exists(parsed.Domain) && !exists(.udm.user_domain) {
+              .udm.user_domain = string!(parsed.Domain)
+          }
+      }
+
+      # ---------------------------------------------------------------
+      # Fallback action label for unhandled event IDs
+      # ---------------------------------------------------------------
+      if !exists(.udm.action) || .udm.action == null {
+          .udm.action = "windows_event_" + to_string(event_id)
+      }
+
+      # ---------------------------------------------------------------
+      # Severity mapping from Windows keywords/levels
+      # ---------------------------------------------------------------
+      if is_winlogbeat {
+          if exists(parsed.winlog.keywords) {
+              keywords = parsed.winlog.keywords
+              if is_array(keywords) {
+                  kw_str = join!(array!(keywords), ",")
+                  if contains(downcase(kw_str), "failure") {
+                      .udm.severity = "medium"
+                  }
+              }
+          }
+          if exists(parsed.winlog.level) {
+              level = downcase(string(parsed.winlog.level) ?? "")
+              if level == "critical" {
+                  .udm.severity = "critical"
+              } else if level == "error" {
+                  .udm.severity = "high"
+              } else if level == "warning" {
+                  .udm.severity = "medium"
+              }
+          }
+      }
+
+      # Bump severity for known high-value events
+      if event_id == 1102 {
+          .udm.severity = "high"
+      }
+
+  } else {
+      .metadata.parse_error = to_string(err)
+  }
+
+  .message = raw_log
