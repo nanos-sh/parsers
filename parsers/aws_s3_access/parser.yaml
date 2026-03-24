@@ -1,0 +1,173 @@
+name: aws_s3_access
+display_name: AWS S3 Access Logs
+version: "1.0.0"
+description: "Parses AWS S3 server access logs including bucket operations, requester identity, and object details"
+match_values:
+  - aws_s3_access
+  - s3_access
+  - aws_s3
+category: cloud
+vendor: "Amazon"
+product: "S3"
+parser_vrl: |
+  # AWS S3 Access Log Parser
+  # Parses space-delimited S3 server access log lines
+
+  # Initialize required structures
+  .udm = {}
+  .ext = {}
+  .metadata = {}
+
+  # Set defaults
+  .udm.timestamp = now()
+  .udm.cloud_provider = "aws"
+  .udm.cloud_service = "s3"
+
+  # Get raw log content
+  raw_log = to_string(.message) ?? ""
+
+  # Parse S3 access log format using regex
+  matched = parse_regex(raw_log, r'^(?P<bucket_owner>\S+)\s+(?P<bucket>\S+)\s+\[(?P<time>[^\]]+)\]\s+(?P<remote_ip>\S+)\s+(?P<requester>\S+)\s+(?P<request_id>\S+)\s+(?P<operation>\S+)\s+(?P<key>\S+)\s+"(?P<request_uri>[^"]*)"\s+(?P<http_status>\S+)\s+(?P<error_code>\S+)\s+(?P<bytes_sent>\S+)\s+(?P<object_size>\S+)\s+(?P<total_time>\S+)\s+(?P<turn_around_time>\S+)\s+"(?P<referer>[^"]*)"\s+"(?P<user_agent>[^"]*)"\s+(?P<version_id>\S+)') ?? {}
+
+  if length(keys(matched)) > 0 {
+      # --- Timestamp ---
+      ts_str = string!(matched.time)
+      if ts_str != "" {
+          ts, ts_err = parse_timestamp(ts_str, "%d/%b/%Y:%H:%M:%S %z")
+          if ts_err == null {
+              .udm.timestamp = format_timestamp!(ts, format: "%Y-%m-%d %H:%M:%S")
+          }
+      }
+
+      # --- Remote IP ---
+      remote_ip = string!(matched.remote_ip)
+      if remote_ip != "-" {
+          .udm.src_ip = remote_ip
+      }
+
+      # --- Requester (User) ---
+      requester = string!(matched.requester)
+      if requester != "-" {
+          .udm.user = requester
+      }
+
+      # --- Operation (Action) ---
+      operation = string!(matched.operation)
+      if operation != "-" {
+          .udm.action = operation
+      }
+
+      # --- Key (File Path) ---
+      key_val = string!(matched.key)
+      if key_val != "-" {
+          .udm.file_path = key_val
+          # Extract file name from key
+          key_parts = split(key_val, "/")
+          if length(key_parts) > 0 {
+              last_idx = length(key_parts) - 1
+              file_name, fn_err = get(key_parts, [last_idx])
+              if fn_err == null {
+                  fname = to_string(file_name) ?? ""
+                  if fname != "" {
+                      .ext.file_name = fname
+                  }
+              }
+          }
+      }
+
+      # --- Request URI (method path protocol) ---
+      request_uri = string!(matched.request_uri)
+      if request_uri != "" && request_uri != "-" {
+          uri_parts = split(request_uri, " ")
+          if length(uri_parts) >= 1 {
+              .udm.http_method = uri_parts[0]
+          }
+          if length(uri_parts) >= 2 {
+              .udm.uri_path = uri_parts[1]
+          }
+      }
+
+      # --- HTTP Status Code ---
+      http_status = string!(matched.http_status)
+      if http_status != "-" {
+          .udm.http_status_code = http_status
+      }
+
+      # --- Error Code ---
+      error_code = string!(matched.error_code)
+      if error_code != "-" {
+          .ext.error_code = error_code
+          .udm.status = "failure"
+      } else {
+          .udm.status = "success"
+      }
+
+      # --- Bytes Sent ---
+      bytes_sent = string!(matched.bytes_sent)
+      if bytes_sent != "-" {
+          .udm.bytes_out = bytes_sent
+      }
+
+      # --- Object Size ---
+      obj_size = string!(matched.object_size)
+      if obj_size != "-" {
+          .ext.file_size = obj_size
+      }
+
+      # --- Total Time (Duration in ms) ---
+      total_time = string!(matched.total_time)
+      if total_time != "-" {
+          .udm.duration = total_time
+      }
+
+      # --- Turn Around Time ---
+      turn_around = string!(matched.turn_around_time)
+      if turn_around != "-" {
+          .ext.turn_around_time = turn_around
+      }
+
+      # --- Referer ---
+      referer = string!(matched.referer)
+      if referer != "" && referer != "-" {
+          .udm.http_referrer = referer
+      }
+
+      # --- User Agent ---
+      ua = string!(matched.user_agent)
+      if ua != "" && ua != "-" {
+          .udm.http_user_agent = ua
+      }
+
+      # --- Bucket (Resource Name) ---
+      bucket = string!(matched.bucket)
+      if bucket != "-" {
+          .udm.resource_name = bucket
+      }
+
+      # --- Bucket Owner ---
+      owner = string!(matched.bucket_owner)
+      if owner != "-" {
+          .ext.bucket_owner = owner
+      }
+
+      # --- Request ID ---
+      req_id = string!(matched.request_id)
+      if req_id != "-" {
+          .ext.request_id = req_id
+      }
+
+      # --- Version ID ---
+      ver_id = string!(matched.version_id)
+      if ver_id != "-" {
+          .ext.version_id = ver_id
+      }
+
+  } else {
+      .metadata.parse_error = "Failed to match S3 access log format"
+  }
+
+  # Set parser name
+  .metadata.parser = "aws_s3_access"
+
+  # Preserve raw log
+  .message = raw_log

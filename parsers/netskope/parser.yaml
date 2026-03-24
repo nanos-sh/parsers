@@ -1,0 +1,249 @@
+name: netskope
+display_name: Netskope
+version: "1.0.0"
+description: "Parses Netskope CASB/SSE logs including application activity, alerts, DLP, and network events"
+match_values:
+  - netskope
+  - netskope_events
+category: security
+vendor: "Netskope"
+product: "SSE"
+parser_vrl: |
+  # Netskope SSE Parser
+  # Parses application events, alerts, DLP, and network events
+
+  # Initialize required structures
+  .udm = {}
+  .ext = {}
+  .metadata = {}
+
+  # Set defaults
+  .udm.timestamp = now()
+  .udm.vendor = "Netskope"
+  .udm.product = "SSE"
+  .udm.vendor_product = "Netskope SSE"
+
+  # Get raw log content
+  raw_log = to_string(.message) ?? ""
+
+  # Parse JSON
+  parsed, err = parse_json(raw_log)
+
+  if err == null {
+      event_type = to_string(parsed.type) ?? "unknown"
+
+      # --- Timestamp (common, epoch seconds) ---
+      if exists(parsed.timestamp) {
+          ts_sec = to_int(parsed.timestamp) ?? 0
+          if ts_sec > 0 {
+              ts, ts_err = from_unix_timestamp(ts_sec)
+              if ts_err == null {
+                  .udm.timestamp = format_timestamp!(ts, format: "%Y-%m-%d %H:%M:%S")
+              }
+          }
+      }
+
+      # --- Common fields ---
+      # User
+      if exists(parsed.user) {
+          .udm.user = string!(parsed.user)
+      }
+
+      # Source IP
+      if exists(parsed.srcip) {
+          .udm.src_ip = string!(parsed.srcip)
+      }
+
+      # Destination IP
+      if exists(parsed.dstip) {
+          .udm.dest_ip = string!(parsed.dstip)
+      }
+
+      # User IP (NAT/internal)
+      if exists(parsed.userip) {
+          .ext.user_ip = string!(parsed.userip)
+      }
+
+      # URL / domain
+      if exists(parsed.url) {
+          .udm.url = string!(parsed.url)
+      }
+      if exists(parsed.domain) {
+          .udm.url_domain = string!(parsed.domain)
+      }
+
+      # Application
+      if exists(parsed.app) {
+          .ext.app = string!(parsed.app)
+      }
+
+      # Activity -> action
+      if exists(parsed.activity) {
+          .udm.action = string!(parsed.activity)
+      }
+
+      # Action -> result
+      if exists(parsed.action) {
+          .udm.result = string!(parsed.action)
+      }
+
+      # Severity
+      if exists(parsed.severity) {
+          .udm.severity = downcase(string!(parsed.severity))
+      }
+
+      # Object -> file_name
+      if exists(parsed.object) {
+          .udm.file_name = string!(parsed.object)
+      }
+      if exists(parsed.object_type) {
+          .ext.object_type = string!(parsed.object_type)
+      }
+
+      # File details
+      if exists(parsed.file_size) {
+          .udm.file_size = to_string(parsed.file_size) ?? ""
+      }
+      if exists(parsed.sha256) {
+          .udm.file_hash = string!(parsed.sha256)
+      }
+      if exists(parsed.md5) {
+          .ext.md5 = string!(parsed.md5)
+      }
+      if exists(parsed.file_type) {
+          .ext.file_type = string!(parsed.file_type)
+      }
+
+      # Bytes
+      if exists(parsed.numbytes) {
+          .udm.bytes_out = to_string(parsed.numbytes) ?? ""
+      }
+
+      # Policy / rule
+      if exists(parsed.policy) {
+          .udm.rule_name = string!(parsed.policy)
+      }
+
+      # Device / OS / browser
+      if exists(parsed.device) {
+          .ext.device = string!(parsed.device)
+      }
+      if exists(parsed.os) {
+          .ext.os = string!(parsed.os)
+      }
+      if exists(parsed.browser) {
+          .ext.browser = string!(parsed.browser)
+      }
+
+      # Access method / traffic type
+      if exists(parsed.access_method) {
+          .ext.access_method = string!(parsed.access_method)
+      }
+      if exists(parsed.traffic_type) {
+          .ext.traffic_type = string!(parsed.traffic_type)
+      }
+
+      # Cloud confidence level
+      if exists(parsed.ccl) {
+          .ext.ccl = string!(parsed.ccl)
+      }
+
+      # Country
+      if exists(parsed.src_country) {
+          .ext.src_country = string!(parsed.src_country)
+      }
+      if exists(parsed.dst_country) {
+          .ext.dst_country = string!(parsed.dst_country)
+      }
+
+      # Organization unit
+      if exists(parsed.organization_unit) {
+          .ext.org_unit = string!(parsed.organization_unit)
+      }
+
+      # From/To user
+      if exists(parsed.from_user) {
+          from_u = string!(parsed.from_user)
+          if from_u != "" {
+              .ext.from_user = from_u
+          }
+      }
+      if exists(parsed.to_user) {
+          to_u = string!(parsed.to_user)
+          if to_u != "" {
+              .ext.to_user = to_u
+          }
+      }
+
+      # Connection / request / transaction IDs
+      if exists(parsed.connection_id) {
+          .ext.connection_id = to_string(parsed.connection_id) ?? ""
+      }
+      if exists(parsed.request_id) {
+          .ext.request_id = string!(parsed.request_id)
+      }
+      if exists(parsed.transaction_id) {
+          .ext.transaction_id = string!(parsed.transaction_id)
+      }
+
+      # --- Type-specific handling ---
+      if event_type == "alert" {
+          .udm.category = "alert"
+
+          if exists(parsed.alert_name) {
+              .ext.alert_name = string!(parsed.alert_name)
+          }
+          if exists(parsed.alert_type) {
+              .ext.alert_type = string!(parsed.alert_type)
+          }
+          if exists(parsed.risk_level) {
+              .ext.risk_level = string!(parsed.risk_level)
+          }
+
+      } else if event_type == "page" || event_type == "application" {
+          .udm.category = "cloud_app"
+
+          # DLP fields
+          if exists(parsed.dlp_profile) {
+              .ext.dlp_profile = string!(parsed.dlp_profile)
+          }
+          if exists(parsed.dlp_rule) {
+              .ext.dlp_rule = string!(parsed.dlp_rule)
+          }
+          if exists(parsed.dlp_incident_id) {
+              .ext.dlp_incident_id = string!(parsed.dlp_incident_id)
+          }
+          if exists(parsed.alert_type) {
+              .ext.alert_type = string!(parsed.alert_type)
+          }
+
+          # Category from data
+          if exists(parsed.category) {
+              .ext.app_category = string!(parsed.category)
+          }
+
+          # Page / site
+          if exists(parsed.page) {
+              .ext.page_url = string!(parsed.page)
+          }
+          if exists(parsed.site) {
+              .ext.site = string!(parsed.site)
+          }
+
+      } else if event_type == "audit" {
+          .udm.category = "audit"
+      } else if event_type == "network" {
+          .udm.category = "network"
+      } else {
+          .udm.category = "cloud_app"
+      }
+
+  } else {
+      .metadata.parse_error = to_string(err)
+  }
+
+  # Set parser name
+  .metadata.parser = "netskope"
+
+  # Preserve raw log
+  .message = raw_log
