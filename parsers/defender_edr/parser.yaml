@@ -212,7 +212,7 @@ parser_vrl: |
               .ext.parent_account_domain = string!(parsed.InitiatingProcessAccountDomain)
           }
           if exists(parsed.InitiatingProcessAccountName) {
-              .udm.parent_user = string!(parsed.InitiatingProcessAccountName)
+              .ext.parent_user = string!(parsed.InitiatingProcessAccountName)
           }
       } else if action_type == "FileCreated" {
           .udm.action = "file_create"
