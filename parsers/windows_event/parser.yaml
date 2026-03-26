@@ -992,6 +992,25 @@ parser_vrl: |
           .ext.target_sid = string(event_data.TargetSid) ?? null
       }
 
+      # === 5058/5059 - Key File/Migration Operation ===
+      if event_id == 5058 || event_id == 5059 {
+          .udm.action = if event_id == 5058 { "key_file_operation" } else { "key_migration_operation" }
+          .udm.category = "system"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .ext.provider_name = string(event_data.ProviderName) ?? null
+          .ext.algorithm_name = string(event_data.AlgorithmName) ?? null
+          .ext.key_name = string(event_data.KeyName) ?? null
+          # Resolve %% key type codes
+          kt_raw = string(event_data.KeyType) ?? ""
+          .ext.key_type = if kt_raw == "%%2499" { "Machine key" } else if kt_raw == "%%2500" { "User key" } else if kt_raw != "" { kt_raw } else { null }
+          # Resolve %% operation codes
+          op_raw = string(event_data.Operation) ?? ""
+          .ext.operation = if op_raw == "%%2458" { "Open Key" } else if op_raw == "%%2459" { "Create Key" } else if op_raw == "%%2460" { "Delete Key" } else if op_raw == "%%2461" { "Read persisted key from file" } else if op_raw == "%%2462" { "Write persisted key to file" } else if op_raw == "%%2463" { "Destroy key" } else if op_raw == "%%2464" { "Export of persistent cryptographic key" } else if op_raw == "%%2465" { "Import of persistent cryptographic key" } else if op_raw != "" { op_raw } else { null }
+          .ext.return_code = string(event_data.ReturnCode) ?? null
+      }
+
       # === 5061 - Cryptographic Operation ===
       if event_id == 5061 {
           .udm.action = "cryptographic_operation"
@@ -1001,8 +1020,10 @@ parser_vrl: |
           .ext.provider_name = string(event_data.ProviderName) ?? null
           .ext.algorithm_name = string(event_data.AlgorithmName) ?? null
           .ext.key_name = string(event_data.KeyName) ?? null
-          .ext.key_type = string(event_data.KeyType) ?? null
-          .ext.operation = string(event_data.Operation) ?? null
+          kt_raw_5061 = string(event_data.KeyType) ?? ""
+          .ext.key_type = if kt_raw_5061 == "%%2499" { "Machine key" } else if kt_raw_5061 == "%%2500" { "User key" } else if kt_raw_5061 != "" { kt_raw_5061 } else { null }
+          op_raw_5061 = string(event_data.Operation) ?? ""
+          .ext.operation = if op_raw_5061 == "%%2480" { "Sign hash" } else if op_raw_5061 == "%%2481" { "Verify hash" } else if op_raw_5061 == "%%2482" { "Encrypt data" } else if op_raw_5061 == "%%2483" { "Decrypt data" } else if op_raw_5061 == "%%2484" { "Export key" } else if op_raw_5061 == "%%2485" { "Import key" } else if op_raw_5061 == "%%2486" { "Derive key" } else if op_raw_5061 != "" { op_raw_5061 } else { null }
       }
 
       # === 5781 - Netlogon ===
