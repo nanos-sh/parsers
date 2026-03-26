@@ -110,9 +110,7 @@ parser_vrl: |
           }
 
           # Task name (e.g. "Logon", "Logoff", "Process Creation")
-          if exists(parsed.task_name) {
-              .ext.task_name = string(parsed.task_name) ?? null
-          }
+          # Not stored in ext — redundant with udm.action which captures the meaning
 
           # Keywords (e.g. "Audit Success", "Audit Failure")
           if exists(parsed.keyword_names) && is_array(parsed.keyword_names) {
@@ -1094,6 +1092,17 @@ parser_vrl: |
       del(.thread_id)
       del(.keywords)
       del(.host)
+      del(.task_name)
+      del(.channel)
+      del(.level)
+      del(.level_value)
+      del(.keyword_names)
+      del(.record_id)
+      del(.process_id)
+      del(.provider_guid)
+      del(.qualifiers)
+      del(.string_inserts)
+      del(.message)
 
       # ---------------------------------------------------------------
       # Severity mapping from Windows keywords/levels
