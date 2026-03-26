@@ -263,10 +263,15 @@ parser_vrl: |
           .ext.target_process_id = to_int(event_data.TargetProcessId) ?? null
           .ext.target_image = string(event_data.TargetImage) ?? null
 
-          # Target user
+          # Target user → dest_user
           target_user = string(event_data.TargetUser) ?? ""
           if target_user != "" {
-              .ext.target_user = target_user
+              user_parts = split(target_user, "\\")
+              if length(user_parts) == 2 {
+                  .udm.dest_user = user_parts[1]
+              } else {
+                  .udm.dest_user = target_user
+              }
           }
       }
 

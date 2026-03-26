@@ -183,7 +183,14 @@ parser_vrl: |
                                   # Target process → ext (no UDM columns)
                                   if name_str == "TargetImage" { .ext.target_image = val_str }
                                   if name_str == "TargetProcessId" { .ext.target_process_id = to_int(val_str) ?? null }
-                                  if name_str == "TargetUser" { .ext.target_user = val_str }
+                                  if name_str == "TargetUser" {
+                                      tu_parts = split(val_str, "\\")
+                                      if length(tu_parts) == 2 {
+                                          .udm.dest_user = string!(get!(tu_parts, [1]))
+                                      } else {
+                                          .udm.dest_user = val_str
+                                      }
+                                  }
                                   if name_str == "SourceProcessGuid" { .ext.source_process_guid = val_str }
                                   if name_str == "TargetProcessGuid" { .ext.target_process_guid = val_str }
                                   if name_str == "GrantedAccess" { .ext.granted_access = val_str }
