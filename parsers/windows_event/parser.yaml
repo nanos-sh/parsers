@@ -1095,13 +1095,12 @@ parser_vrl: |
       del(.task_name)
       del(.channel)
       del(.level)
-      del(.level_value)
+      # Note: level_value and string_inserts kept in ext — useful for analysis
       del(.keyword_names)
       del(.record_id)
       del(.process_id)
       del(.provider_guid)
       del(.qualifiers)
-      del(.string_inserts)
       # Note: do NOT del(.message) — it's the raw log stored in the message column
 
       # ---------------------------------------------------------------
