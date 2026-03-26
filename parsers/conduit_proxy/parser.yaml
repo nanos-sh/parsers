@@ -1,0 +1,135 @@
+name: conduit_proxy
+display_name: Conduit MITM Proxy
+version: "1.0.0"
+description: "Parses Conduit MITM proxy logs. Captures HTTP/HTTPS requests with TLS interception status, threat scoring, DLP matches, and upstream connection details."
+match_values:
+  - conduit
+  - conduit_proxy
+  - conduit-proxy
+category: network
+vendor: "Conduit"
+product: "Conduit Proxy"
+
+parser_vrl: |
+  .udm = {}
+  .ext = {}
+
+  raw_log = string!(.message)
+  parsed, err = parse_json(raw_log)
+
+  if err == null {
+      # ---------------------------------------------------------------
+      # Core network fields
+      # ---------------------------------------------------------------
+      .udm.src_ip = string(parsed.client_ip) ?? null
+      .udm.dest_host = string(parsed.host) ?? null
+      .udm.dest_port = to_int(parsed.port) ?? null
+      .udm.url = string(parsed.full_url) ?? null
+      .udm.url_domain = string(parsed.host) ?? null
+      .udm.uri_path = string(parsed.path) ?? null
+      .udm.http_method = string(parsed.method) ?? null
+      .udm.http_status_code = to_int(parsed.status_code) ?? null
+      .udm.bytes_in = to_int(parsed.request_bytes) ?? null
+      .udm.bytes_out = to_int(parsed.response_bytes) ?? null
+      .udm.duration = to_int(parsed.duration_ms) ?? null
+      .udm.protocol = string(parsed.scheme) ?? null
+
+      # Upstream (destination server)
+      upstream = string(parsed.upstream_addr) ?? ""
+      if upstream != "" {
+          parts = split(upstream, ":")
+          if length(parts) == 2 {
+              .udm.dest_ip = parts[0] ?? null
+          }
+      }
+
+      # User if authenticated
+      .udm.user = string(parsed.username) ?? null
+      .ext.auth_method = string(parsed.auth_method) ?? null
+
+      # Timestamp
+      if exists(parsed.timestamp) {
+          ts, ts_err = parse_timestamp(string!(parsed.timestamp), "%+")
+          if ts_err == null {
+              .udm.timestamp = ts
+          }
+      }
+
+      # ---------------------------------------------------------------
+      # Action and category
+      # ---------------------------------------------------------------
+      action_raw = string(parsed.action) ?? "unknown"
+      .udm.action = action_raw
+      .udm.category = "web_proxy"
+
+      # Blocked requests get elevated severity
+      threat_blocked = bool(parsed.threat_blocked) ?? false
+      if threat_blocked {
+          .udm.action = "blocked"
+          .udm.severity = "high"
+      }
+
+      # ---------------------------------------------------------------
+      # TLS interception
+      # ---------------------------------------------------------------
+      tls_intercepted = bool(parsed.tls_intercepted) ?? false
+      .ext.tls_intercepted = if tls_intercepted { "true" } else { "false" }
+
+      # ---------------------------------------------------------------
+      # Threat intelligence
+      # ---------------------------------------------------------------
+      threat_score = to_float(parsed.threat_score) ?? 0.0
+      .ext.threat_score = to_string(threat_score)
+      .ext.threat_tier = string(parsed.threat_tier) ?? null
+
+      # Surface threat signals as comma-separated string
+      if exists(parsed.threat_signals) && is_array(parsed.threat_signals) {
+          signal_names = map_values(array!(parsed.threat_signals)) -> |signal| {
+              string(signal.name) ?? "unknown"
+          }
+          .ext.threat_signals = join!(signal_names, ", ")
+      }
+
+      # Set severity based on threat score
+      if !threat_blocked {
+          if threat_score >= 0.8 {
+              .udm.severity = "high"
+          } else if threat_score >= 0.5 {
+              .udm.severity = "medium"
+          } else if threat_score >= 0.2 {
+              .udm.severity = "low"
+          }
+      }
+
+      # ---------------------------------------------------------------
+      # DLP matches
+      # ---------------------------------------------------------------
+      if exists(parsed.dlp_matches) && is_array(parsed.dlp_matches) {
+          .ext.dlp_matches = join!(array!(parsed.dlp_matches), ", ")
+          # DLP match always bumps severity
+          if !threat_blocked {
+              .udm.severity = "medium"
+          }
+      }
+
+      # ---------------------------------------------------------------
+      # Extended fields
+      # ---------------------------------------------------------------
+      .ext.content_type = string(parsed.content_type) ?? null
+      .ext.cache_status = string(parsed.cache_status) ?? null
+      .ext.rule_id = string(parsed.rule_id) ?? null
+      .ext.category = string(parsed.category) ?? null
+      .ext.upstream_addr = string(parsed.upstream_addr) ?? null
+
+      # ---------------------------------------------------------------
+      # Vendor/product
+      # ---------------------------------------------------------------
+      .udm.vendor = "Conduit"
+      .udm.product = "Conduit Proxy"
+      .udm.signature_id = to_string(parsed.status_code) ?? null
+
+  } else {
+      .metadata.parse_error = to_string(err)
+  }
+
+  .message = raw_log
