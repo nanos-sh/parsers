@@ -163,7 +163,6 @@ parser_vrl: |
       # Common fields
       # ---------------------------------------------------------------
       .udm.signature_id = to_string(event_id)
-      .metadata.event_id = event_id
       .udm.src_host = computer_name
       .ext.channel = channel
       .ext.provider = provider_name
@@ -1021,9 +1020,19 @@ parser_vrl: |
           .udm.action = downcase(channel) + "_" + to_string(event_id)
       }
 
-      # Always store event_id and channel in ext for filtering
-      .ext.event_id = event_id
-      .ext.channel = channel
+      # Clean up raw fields that are already mapped to UDM/ext
+      # to prevent them leaking into the ext JSON column as duplicates
+      del(.event_id)
+      del(.computer)
+      del(.provider_name)
+      del(.timestamp)
+      del(.event_data)
+      del(.activity_id)
+      del(.version)
+      del(.task)
+      del(.thread_id)
+      del(.keywords)
+      del(.host)
 
       # ---------------------------------------------------------------
       # Severity mapping from Windows keywords/levels
