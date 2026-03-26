@@ -224,8 +224,11 @@ parser_vrl: |
           .ext.transmitted_services = string(event_data.TransmittedServices) ?? null
           .ext.lm_package_name = string(event_data.LmPackageName) ?? null
           .ext.key_length = string(event_data.KeyLength) ?? null
-          .ext.impersonation_level = string(event_data.ImpersonationLevel) ?? null
-          .ext.elevated_token = string(event_data.ElevatedToken) ?? null
+          # Resolve Windows %% parameter insertion strings
+          imp_raw = string(event_data.ImpersonationLevel) ?? ""
+          .ext.impersonation_level = if imp_raw == "%%1832" { "Identification" } else if imp_raw == "%%1833" { "Impersonation" } else if imp_raw == "%%1834" { "Delegation" } else if imp_raw == "%%1835" { "Denied" } else if imp_raw == "%%1843" { "Default" } else if imp_raw != "" { imp_raw } else { null }
+          elev_raw = string(event_data.ElevatedToken) ?? ""
+          .ext.elevated_token = if elev_raw == "%%1842" { "Yes" } else if elev_raw == "%%1840" { "No" } else if elev_raw == "%%1841" { "No" } else if elev_raw == "%%1843" { "Default" } else if elev_raw != "" { elev_raw } else { null }
       }
 
       # === 4625 - Failed Logon ===
@@ -255,7 +258,9 @@ parser_vrl: |
           .ext.logon_process = string(event_data.LogonProcessName) ?? null
           .udm.authentication_method = string(event_data.AuthenticationPackageName) ?? null
           .ext.workstation_name = string(event_data.WorkstationName) ?? null
-          .ext.failure_reason_code = string(event_data.FailureReason) ?? null
+          # Resolve Windows %% failure reason codes
+          fr_raw = string(event_data.FailureReason) ?? ""
+          .ext.failure_reason_code = if fr_raw == "%%2304" { "Unknown" } else if fr_raw == "%%2305" { "No" } else if fr_raw == "%%2306" { "Yes" } else if fr_raw == "%%2307" { "Workstation" } else if fr_raw == "%%2308" { "Server" } else if fr_raw == "%%2309" { "Domain Controller" } else if fr_raw == "%%2310" { "Logon type not granted" } else if fr_raw == "%%2311" { "Account time restriction" } else if fr_raw == "%%2312" { "Account disabled" } else if fr_raw == "%%2313" { "Unknown user name or bad password" } else if fr_raw != "" { fr_raw } else { null }
 
           # Map Status/SubStatus to human-readable failure reasons
           status_code = downcase(string(event_data.Status) ?? "")
