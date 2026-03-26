@@ -4,6 +4,12 @@ version: "1.0.0"
 description: "Parses Windows Event Logs from Winlogbeat JSON and NXLog JSON formats. Covers Security, System, and Application channels with specific field extraction for logon (4624/4625), process creation (4688), service install (4697/7045), Kerberos (4768/4769/4771), account management (4720-4726), group changes (4728/4732/4756), share access (5140/5145), audit log cleared (1102), and more."
 match_values:
   - windows_event
+  - windows_security
+  - windows_system
+  - windows_application
+  - windows_sysmon
+  - windows_powershell
+  - windows_defender
   - winlogbeat
   - windows
   - win_event
@@ -26,6 +32,7 @@ parser_vrl: |
       # Detect format: Winlogbeat vs NXLog
       # ---------------------------------------------------------------
       is_winlogbeat = exists(parsed.winlog)
+      is_vector_native = exists(parsed.event_id) && exists(parsed.channel) && !exists(parsed.winlog)
 
       event_id = 0
       event_data = {}
@@ -80,6 +87,62 @@ parser_vrl: |
           # Record ID
           if exists(winlog.record_id) {
               .ext.record_id = to_int(winlog.record_id) ?? null
+          }
+
+      } else if is_vector_native {
+          # --- Vector native windows_event_log source format ---
+          # Fields at top level: event_id, channel, event_data, computer, provider_name, etc.
+          event_id = to_int(parsed.event_id) ?? 0
+
+          if exists(parsed.event_data) && is_object(parsed.event_data) {
+              event_data = object!(parsed.event_data)
+          }
+
+          computer_name = string(parsed.computer) ?? string(parsed.host) ?? ""
+          channel = string(parsed.channel) ?? ""
+          provider_name = string(parsed.provider_name) ?? ""
+
+          # Timestamp (ISO8601)
+          if exists(parsed.timestamp) {
+              ts, ts_err = parse_timestamp(string!(parsed.timestamp), "%+")
+              if ts_err == null {
+                  .udm.timestamp = ts
+              }
+          }
+
+          # Record ID
+          if exists(parsed.record_id) {
+              .ext.record_id = to_int(parsed.record_id) ?? null
+          }
+
+          # Task name (e.g. "Logon", "Logoff", "Process Creation")
+          if exists(parsed.task_name) {
+              .ext.task_name = string(parsed.task_name) ?? null
+          }
+
+          # Keywords (e.g. "Audit Success", "Audit Failure")
+          if exists(parsed.keyword_names) {
+              .ext.keyword_names = parsed.keyword_names
+          }
+
+          # Level
+          if exists(parsed.level) {
+              .ext.level = string(parsed.level) ?? null
+          }
+
+          # Process ID of the logging process
+          if exists(parsed.process_id) {
+              .ext.logging_process_id = to_int(parsed.process_id) ?? null
+          }
+
+          # Provider GUID
+          if exists(parsed.provider_guid) {
+              .ext.provider_guid = string(parsed.provider_guid) ?? null
+          }
+
+          # Source host from agent enrichment
+          if exists(parsed.src_host) {
+              .udm.src_host = string(parsed.src_host) ?? ""
           }
 
       } else {
