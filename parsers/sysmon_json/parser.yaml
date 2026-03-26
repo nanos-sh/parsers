@@ -154,11 +154,11 @@ parser_vrl: |
           .udm.protocol = downcase(string(event_data.Protocol) ?? "")
 
           src_hostname = string(event_data.SourceHostname) ?? ""
-          if src_hostname != "" {
+          if src_hostname != "" && src_hostname != "-" {
               .udm.src_host = src_hostname
           }
           dest_hostname = string(event_data.DestinationHostname) ?? ""
-          if dest_hostname != "" {
+          if dest_hostname != "" && dest_hostname != "-" {
               .udm.dest_host = dest_hostname
           }
 
