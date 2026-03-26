@@ -215,9 +215,15 @@ parser_vrl: |
               .udm.src_port = to_int(ip_port) ?? null
           }
 
+          # For logon events, computer is the auth server (dest), WorkstationName is the source
+          .udm.dest_host = computer_name
+          workstation = downcase(string(event_data.WorkstationName) ?? "")
+          if workstation != "" && workstation != "-" {
+              .udm.src_host = workstation
+          }
+
           .ext.logon_process = string(event_data.LogonProcessName) ?? null
           .udm.authentication_method = string(event_data.AuthenticationPackageName) ?? null
-          .ext.workstation_name = string(event_data.WorkstationName) ?? null
           .ext.logon_guid = string(event_data.LogonGuid) ?? null
           .ext.transmitted_services = string(event_data.TransmittedServices) ?? null
           .ext.lm_package_name = string(event_data.LmPackageName) ?? null
@@ -253,9 +259,15 @@ parser_vrl: |
               .udm.src_port = to_int(ip_port) ?? null
           }
 
+          # For logon events, computer is the auth server (dest), WorkstationName is the source
+          .udm.dest_host = computer_name
+          workstation = downcase(string(event_data.WorkstationName) ?? "")
+          if workstation != "" && workstation != "-" {
+              .udm.src_host = workstation
+          }
+
           .ext.logon_process = string(event_data.LogonProcessName) ?? null
           .udm.authentication_method = string(event_data.AuthenticationPackageName) ?? null
-          .ext.workstation_name = string(event_data.WorkstationName) ?? null
           # Resolve Windows %% failure reason codes
           fr_raw = string(event_data.FailureReason) ?? ""
           .ext.failure_reason_code = if fr_raw == "%%2304" { "Unknown" } else if fr_raw == "%%2305" { "No" } else if fr_raw == "%%2306" { "Yes" } else if fr_raw == "%%2307" { "Workstation" } else if fr_raw == "%%2308" { "Server" } else if fr_raw == "%%2309" { "Domain Controller" } else if fr_raw == "%%2310" { "Logon type not granted" } else if fr_raw == "%%2311" { "Account time restriction" } else if fr_raw == "%%2312" { "Account disabled" } else if fr_raw == "%%2313" { "Unknown user name or bad password" } else if fr_raw != "" { fr_raw } else { null }
@@ -293,7 +305,7 @@ parser_vrl: |
           .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
           .udm.dest_user = string(event_data.TargetUserName) ?? null
           .udm.dest_nt_domain = string(event_data.TargetDomainName) ?? null
-          .ext.target_server_name = string(event_data.TargetServerName) ?? null
+          .udm.dest_host = string(event_data.TargetServerName) ?? null
           .ext.target_info = string(event_data.TargetInfo) ?? null
           .ext.subject_logon_id = string(event_data.SubjectLogonId) ?? null
 
@@ -540,6 +552,7 @@ parser_vrl: |
           .udm.action = "kerberos_tgt_request"
           .udm.category = "authentication"
           .udm.auth_type = "Kerberos"
+          .udm.dest_host = computer_name
           .udm.user = string(event_data.TargetUserName) ?? null
           .udm.user_domain = string(event_data.TargetDomainName) ?? null
           .udm.user_id = string(event_data.TargetSid) ?? null
@@ -581,6 +594,7 @@ parser_vrl: |
           .udm.action = "kerberos_service_ticket"
           .udm.category = "authentication"
           .udm.auth_type = "Kerberos"
+          .udm.dest_host = computer_name
           .udm.user = string(event_data.TargetUserName) ?? null
           .udm.user_domain = string(event_data.TargetDomainName) ?? null
 
@@ -617,6 +631,7 @@ parser_vrl: |
           .udm.category = "authentication"
           .udm.auth_type = "Kerberos"
           .udm.auth_result = "failure"
+          .udm.dest_host = computer_name
           .udm.user = string(event_data.TargetUserName) ?? null
           .udm.user_id = string(event_data.TargetSid) ?? null
           .ext.service_name = string(event_data.ServiceName) ?? null
@@ -650,9 +665,13 @@ parser_vrl: |
           .udm.action = "ntlm_authentication"
           .udm.category = "authentication"
           .udm.auth_type = "NTLM"
+          .udm.dest_host = computer_name
           .udm.user = string(event_data.TargetUserName) ?? null
           .ext.authenticating_package = string(event_data.AuthenticationPackageName) ?? null
-          .ext.workstation_name = string(event_data.Workstation) ?? null
+          workstation_4776 = downcase(string(event_data.Workstation) ?? "")
+          if workstation_4776 != "" && workstation_4776 != "-" {
+              .udm.src_host = workstation_4776
+          }
 
           status_4776 = downcase(string(event_data.Status) ?? "")
           .udm.auth_result = if status_4776 == "0x0" { "success" } else { "failure" }
