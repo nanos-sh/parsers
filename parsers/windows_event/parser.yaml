@@ -809,6 +809,179 @@ parser_vrl: |
           .ext.profile = string(event_data.ProfileChanged) ?? null
       }
 
+      # === System Channel: Service State Changes ===
+      if event_id == 7036 {
+          .udm.action = "service_state_change"
+          .udm.category = "service"
+          service_name = string(event_data.param1) ?? ""
+          service_state = string(event_data.param2) ?? ""
+          if service_name != "" {
+              .ext.service_name = service_name
+          }
+          if service_state != "" {
+              .udm.status = service_state
+          }
+      }
+
+      # === 7040 - Service Start Type Changed ===
+      if event_id == 7040 {
+          .udm.action = "service_config_change"
+          .udm.category = "service"
+          .ext.service_name = string(event_data.param1) ?? null
+          .ext.old_start_type = string(event_data.param2) ?? null
+          .ext.new_start_type = string(event_data.param3) ?? null
+      }
+
+      # === 7045 already handled above ===
+
+      # === 1074 - System Shutdown/Restart ===
+      if event_id == 1074 {
+          .udm.action = "system_shutdown"
+          .udm.category = "system"
+          .ext.shutdown_type = string(event_data.param5) ?? null
+          .ext.shutdown_reason = string(event_data.param3) ?? null
+          process_name = string(event_data.param1) ?? ""
+          if process_name != "" {
+              .udm.process_path = process_name
+          }
+          .udm.user = string(event_data.param7) ?? null
+      }
+
+      # === 6005/6006 - Event Log Service Started/Stopped ===
+      if event_id == 6005 {
+          .udm.action = "eventlog_started"
+          .udm.category = "system"
+      }
+      if event_id == 6006 {
+          .udm.action = "eventlog_stopped"
+          .udm.category = "system"
+      }
+
+      # === 6008 - Unexpected Shutdown ===
+      if event_id == 6008 {
+          .udm.action = "unexpected_shutdown"
+          .udm.category = "system"
+          .udm.severity = "medium"
+      }
+
+      # === 4719 - Audit Policy Changed ===
+      if event_id == 4719 {
+          .udm.action = "audit_policy_changed"
+          .udm.category = "policy"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .ext.subcategory = string(event_data.SubcategoryGuid) ?? null
+          .ext.audit_policy_changes = string(event_data.AuditPolicyChanges) ?? null
+          .udm.severity = "high"
+      }
+
+      # === 4670 - Permissions on Object Changed ===
+      if event_id == 4670 {
+          .udm.action = "permissions_changed"
+          .udm.category = "authorization"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .ext.object_name = string(event_data.ObjectName) ?? null
+          .ext.object_type = string(event_data.ObjectType) ?? null
+      }
+
+      # === 4698/4699/4700/4701/4702 - Scheduled Task Events ===
+      if event_id == 4698 {
+          .udm.action = "scheduled_task_created"
+          .udm.category = "process"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .ext.task_name = string(event_data.TaskName) ?? null
+          .ext.task_content = string(event_data.TaskContent) ?? null
+          .udm.severity = "medium"
+      }
+      if event_id == 4699 {
+          .udm.action = "scheduled_task_deleted"
+          .udm.category = "process"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .ext.task_name = string(event_data.TaskName) ?? null
+      }
+      if event_id == 4700 {
+          .udm.action = "scheduled_task_enabled"
+          .udm.category = "process"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .ext.task_name = string(event_data.TaskName) ?? null
+      }
+      if event_id == 4701 {
+          .udm.action = "scheduled_task_disabled"
+          .udm.category = "process"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .ext.task_name = string(event_data.TaskName) ?? null
+      }
+
+      # === PowerShell Events (400/403/4103/4104) ===
+      if event_id == 4104 {
+          .udm.action = "powershell_script_block"
+          .udm.category = "process"
+          .ext.script_block_text = string(event_data.ScriptBlockText) ?? null
+          .ext.script_block_id = string(event_data.ScriptBlockId) ?? null
+          .ext.path = string(event_data.Path) ?? null
+          .udm.severity = "low"
+      }
+      if event_id == 4103 {
+          .udm.action = "powershell_module_logging"
+          .udm.category = "process"
+          .ext.payload = string(event_data.Payload) ?? null
+      }
+
+      # === Defender Events (1006/1007/1116/1117) ===
+      if event_id == 1116 || event_id == 1006 {
+          .udm.action = "malware_detected"
+          .udm.category = "threat"
+          .udm.severity = "high"
+          .ext.threat_name = string(event_data."Threat Name") ?? string(event_data.ThreatName) ?? null
+          .ext.severity_name = string(event_data."Severity Name") ?? string(event_data.SeverityName) ?? null
+          .ext.path = string(event_data.Path) ?? string(event_data."Path") ?? null
+          .udm.user = string(event_data."Detection User") ?? null
+      }
+      if event_id == 1117 || event_id == 1007 {
+          .udm.action = "malware_action_taken"
+          .udm.category = "threat"
+          .ext.threat_name = string(event_data."Threat Name") ?? string(event_data.ThreatName) ?? null
+          .ext.action_name = string(event_data."Action Name") ?? string(event_data.ActionName) ?? null
+          .ext.path = string(event_data.Path) ?? null
+      }
+
+      # ---------------------------------------------------------------
+      # Improved fallback: extract common fields for unhandled event IDs
+      # ---------------------------------------------------------------
+      if !exists(.udm.action) || .udm.action == null {
+          # Derive category from channel
+          ch = downcase(channel)
+          if contains(ch, "security") {
+              .udm.category = "security"
+          } else if contains(ch, "system") {
+              .udm.category = "system"
+          } else if contains(ch, "application") {
+              .udm.category = "application"
+          } else if contains(ch, "powershell") {
+              .udm.category = "process"
+          } else if contains(ch, "defender") {
+              .udm.category = "threat"
+          }
+
+          # Try to extract user from common event_data patterns
+          if exists(event_data.SubjectUserName) {
+              .udm.user = string(event_data.SubjectUserName) ?? null
+              .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          } else if exists(event_data.TargetUserName) {
+              .udm.user = string(event_data.TargetUserName) ?? null
+              .udm.user_domain = string(event_data.TargetDomainName) ?? null
+          }
+
+          # Try to extract IP
+          if exists(event_data.IpAddress) {
+              ip = string(event_data.IpAddress) ?? ""
+              if ip != "" && ip != "-" {
+                  .udm.src_ip = ip
+              }
+          }
+      }
+
       # === NXLog-specific extra fields ===
       if !is_winlogbeat {
           if exists(parsed.EventType) {
@@ -840,8 +1013,12 @@ parser_vrl: |
       # Fallback action label for unhandled event IDs
       # ---------------------------------------------------------------
       if !exists(.udm.action) || .udm.action == null {
-          .udm.action = "windows_event_" + to_string(event_id)
+          .udm.action = downcase(channel) + "_" + to_string(event_id)
       }
+
+      # Always store event_id and channel in ext for filtering
+      .ext.event_id = event_id
+      .ext.channel = channel
 
       # ---------------------------------------------------------------
       # Severity mapping from Windows keywords/levels
@@ -865,6 +1042,24 @@ parser_vrl: |
               } else if level == "warning" {
                   .udm.severity = "medium"
               }
+          }
+      }
+
+      # Vector native format severity mapping
+      if is_vector_native {
+          if exists(parsed.keyword_names) && is_array(parsed.keyword_names) {
+              kw_str = downcase(join!(array!(parsed.keyword_names), ","))
+              if contains(kw_str, "failure") {
+                  .udm.severity = "medium"
+              }
+          }
+          level = downcase(string(parsed.level) ?? "")
+          if level == "critical" {
+              .udm.severity = "critical"
+          } else if level == "error" {
+              .udm.severity = "high"
+          } else if level == "warning" {
+              .udm.severity = "medium"
           }
       }
 
