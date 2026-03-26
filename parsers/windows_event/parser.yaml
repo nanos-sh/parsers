@@ -747,6 +747,34 @@ parser_vrl: |
           .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
       }
 
+      # === 5379 - Credential Manager Read ===
+      if event_id == 5379 {
+          .udm.action = "credential_read"
+          .udm.category = "credential_access"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.user_id = string(event_data.SubjectUserSid) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .ext.target_name = string(event_data.TargetName) ?? null
+          .ext.credential_type = string(event_data.Type) ?? null
+          .ext.return_code = string(event_data.ReturnCode) ?? null
+          .ext.credentials_returned = string(event_data.CountOfCredentialsReturned) ?? null
+          # Resolve %% read operation code
+          read_op = string(event_data.ReadOperation) ?? ""
+          .ext.read_operation = if read_op == "%%8100" { "Enumerate Credentials" } else if read_op == "%%8098" { "Read Credential" } else if read_op == "%%8099" { "Write Credential" } else if read_op == "%%8101" { "Write Domain Credentials" } else if read_op == "%%8102" { "Read Domain Credentials" } else if read_op != "" { read_op } else { null }
+      }
+
+      # === 5380/5381/5382 - Credential Manager Write/Delete ===
+      if event_id == 5380 || event_id == 5381 || event_id == 5382 {
+          .udm.action = if event_id == 5380 { "vault_credential_read" } else if event_id == 5381 { "vault_credential_created" } else { "vault_credential_deleted" }
+          .udm.category = "credential_access"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.user_id = string(event_data.SubjectUserSid) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .ext.target_name = string(event_data.TargetName) ?? null
+      }
+
       # === 4663 - Object Access Attempt ===
       if event_id == 4663 {
           .udm.action = "object_access"
@@ -869,6 +897,121 @@ parser_vrl: |
           .udm.action = "unexpected_shutdown"
           .udm.category = "system"
           .udm.severity = "medium"
+      }
+
+      # === 104 - Event Log Cleared (System channel) ===
+      if event_id == 104 {
+          .udm.action = "event_log_cleared"
+          .udm.category = "audit"
+          .udm.severity = "high"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .ext.log_name = string(event_data.Channel) ?? null
+      }
+
+      # === 4616 - System Time Changed ===
+      if event_id == 4616 {
+          .udm.action = "system_time_changed"
+          .udm.category = "system"
+          .udm.severity = "medium"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+      }
+
+      # === 4662 - Directory Service Object Access ===
+      if event_id == 4662 {
+          .udm.action = "directory_service_access"
+          .udm.category = "object_access"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .ext.object_type = string(event_data.ObjectType) ?? null
+          .ext.object_name = string(event_data.ObjectName) ?? null
+          .ext.access_mask = string(event_data.AccessMask) ?? null
+      }
+
+      # === 4738 - User Account Changed ===
+      if event_id == 4738 {
+          .udm.action = "account_changed"
+          .udm.category = "account_management"
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.TargetDomainName) ?? null
+          .udm.user_id = string(event_data.TargetSid) ?? null
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+      }
+
+      # === 4741 - Computer Account Created ===
+      if event_id == 4741 {
+          .udm.action = "computer_account_created"
+          .udm.category = "account_management"
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.TargetDomainName) ?? null
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+      }
+
+      # === 4742 - Computer Account Changed ===
+      if event_id == 4742 {
+          .udm.action = "computer_account_changed"
+          .udm.category = "account_management"
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.TargetDomainName) ?? null
+          .udm.src_user = string(event_data.SubjectUserName) ?? null
+          .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
+      }
+
+      # === 4799 - Security Group Membership Enumerated ===
+      if event_id == 4799 {
+          .udm.action = "group_membership_enumerated"
+          .udm.category = "reconnaissance"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .ext.target_user = string(event_data.TargetUserName) ?? null
+          .ext.target_domain = string(event_data.TargetDomainName) ?? null
+          .ext.target_sid = string(event_data.TargetSid) ?? null
+      }
+
+      # === 5061 - Cryptographic Operation ===
+      if event_id == 5061 {
+          .udm.action = "cryptographic_operation"
+          .udm.category = "system"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .ext.provider_name = string(event_data.ProviderName) ?? null
+          .ext.algorithm_name = string(event_data.AlgorithmName) ?? null
+          .ext.key_name = string(event_data.KeyName) ?? null
+          .ext.key_type = string(event_data.KeyType) ?? null
+          .ext.operation = string(event_data.Operation) ?? null
+      }
+
+      # === 5781 - Netlogon ===
+      if event_id == 5781 {
+          .udm.action = "netlogon"
+          .udm.category = "authentication"
+      }
+
+      # === 40961/40962 - PowerShell Console Start/Ready ===
+      if event_id == 40961 || event_id == 40962 {
+          .udm.action = if event_id == 40961 { "powershell_console_starting" } else { "powershell_console_ready" }
+          .udm.category = "process"
+      }
+
+      # === 53504 - DNS Server ===
+      if event_id == 53504 {
+          .udm.action = "dns_server_event"
+          .udm.category = "network"
+      }
+
+      # === 4100 - PowerShell Pipeline Execution ===
+      if event_id == 4100 {
+          .udm.action = "powershell_pipeline_execution"
+          .udm.category = "process"
+          .ext.command_path = string(event_data.CommandPath) ?? null
+          .ext.command_name = string(event_data.CommandName) ?? null
+          .ext.command_type = string(event_data.CommandType) ?? null
+          .udm.user = string(event_data.UserId) ?? null
       }
 
       # === 4719 - Audit Policy Changed ===
