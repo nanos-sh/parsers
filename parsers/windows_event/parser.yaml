@@ -115,8 +115,8 @@ parser_vrl: |
           }
 
           # Keywords (e.g. "Audit Success", "Audit Failure")
-          if exists(parsed.keyword_names) {
-              .ext.keyword_names = parsed.keyword_names
+          if exists(parsed.keyword_names) && is_array(parsed.keyword_names) {
+              .ext.keyword_names = join!(array!(parsed.keyword_names), ", ")
           }
 
           # Level
