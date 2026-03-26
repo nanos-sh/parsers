@@ -220,6 +220,10 @@ parser_vrl: |
           workstation = downcase(string(event_data.WorkstationName) ?? "")
           if workstation != "" && workstation != "-" {
               .udm.src_host = workstation
+          } else {
+              # Clear src_host so the DC hostname doesn't pollute identity observations
+              # The src_ip still provides the identity mapping
+              .udm.src_host = null
           }
 
           .ext.logon_process = string(event_data.LogonProcessName) ?? null
@@ -261,9 +265,11 @@ parser_vrl: |
 
           # For logon events, computer is the auth server (dest), WorkstationName is the source
           .udm.dest_host = computer_name
-          workstation = downcase(string(event_data.WorkstationName) ?? "")
-          if workstation != "" && workstation != "-" {
-              .udm.src_host = workstation
+          workstation_4625 = downcase(string(event_data.WorkstationName) ?? "")
+          if workstation_4625 != "" && workstation_4625 != "-" {
+              .udm.src_host = workstation_4625
+          } else {
+              .udm.src_host = null
           }
 
           .ext.logon_process = string(event_data.LogonProcessName) ?? null
@@ -553,6 +559,7 @@ parser_vrl: |
           .udm.category = "authentication"
           .udm.auth_type = "Kerberos"
           .udm.dest_host = computer_name
+          .udm.src_host = null
           .udm.user = string(event_data.TargetUserName) ?? null
           .udm.user_domain = string(event_data.TargetDomainName) ?? null
           .udm.user_id = string(event_data.TargetSid) ?? null
@@ -595,6 +602,7 @@ parser_vrl: |
           .udm.category = "authentication"
           .udm.auth_type = "Kerberos"
           .udm.dest_host = computer_name
+          .udm.src_host = null
           .udm.user = string(event_data.TargetUserName) ?? null
           .udm.user_domain = string(event_data.TargetDomainName) ?? null
 
@@ -632,6 +640,7 @@ parser_vrl: |
           .udm.auth_type = "Kerberos"
           .udm.auth_result = "failure"
           .udm.dest_host = computer_name
+          .udm.src_host = null
           .udm.user = string(event_data.TargetUserName) ?? null
           .udm.user_id = string(event_data.TargetSid) ?? null
           .ext.service_name = string(event_data.ServiceName) ?? null
