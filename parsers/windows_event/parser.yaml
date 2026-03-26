@@ -1002,14 +1002,6 @@ parser_vrl: |
       }
 
       # ---------------------------------------------------------------
-      # Surface message for all events that have one
-      # ---------------------------------------------------------------
-      raw_message = string(parsed.message) ?? ""
-      if raw_message != "" && !exists(.udm.message) {
-          .udm.message = raw_message
-      }
-
-      # ---------------------------------------------------------------
       # Improved fallback: extract common fields for unhandled event IDs
       # ---------------------------------------------------------------
       if !exists(.udm.action) || .udm.action == null {
