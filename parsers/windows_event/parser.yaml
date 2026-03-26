@@ -226,7 +226,7 @@ parser_vrl: |
           .ext.key_length = string(event_data.KeyLength) ?? null
           # Resolve Windows %% parameter insertion strings
           imp_raw = string(event_data.ImpersonationLevel) ?? ""
-          .ext.impersonation_level = if imp_raw == "%%1832" { "Identification" } else if imp_raw == "%%1833" { "Impersonation" } else if imp_raw == "%%1834" { "Delegation" } else if imp_raw == "%%1835" { "Denied" } else if imp_raw == "%%1843" { "Default" } else if imp_raw != "" { imp_raw } else { null }
+          .ext.impersonation_level = if imp_raw == "%%1831" { "Anonymous" } else if imp_raw == "%%1832" { "Identification" } else if imp_raw == "%%1833" { "Impersonation" } else if imp_raw == "%%1834" { "Delegation" } else if imp_raw == "%%1835" { "Denied" } else if imp_raw == "%%1836" { "System" } else if imp_raw == "%%1837" { "Not Available" } else if imp_raw == "%%1838" { "Default" } else if imp_raw == "%%1839" { "Not Available" } else if imp_raw == "%%1840" { "Anonymous" } else if imp_raw == "%%1841" { "Identify" } else if imp_raw == "%%1842" { "Impersonate" } else if imp_raw == "%%1843" { "Delegate" } else if imp_raw != "" { imp_raw } else { null }
           elev_raw = string(event_data.ElevatedToken) ?? ""
           .ext.elevated_token = if elev_raw == "%%1842" { "Yes" } else if elev_raw == "%%1840" { "No" } else if elev_raw == "%%1841" { "No" } else if elev_raw == "%%1843" { "Default" } else if elev_raw != "" { elev_raw } else { null }
       }
@@ -953,6 +953,62 @@ parser_vrl: |
           .ext.threat_name = string(event_data."Threat Name") ?? string(event_data.ThreatName) ?? null
           .ext.action_name = string(event_data."Action Name") ?? string(event_data.ActionName) ?? null
           .ext.path = string(event_data.Path) ?? null
+      }
+
+      # ---------------------------------------------------------------
+      # Application Channel Events
+      # ---------------------------------------------------------------
+
+      # === 1000 - Application Error (crash) ===
+      if event_id == 1000 && downcase(channel) == "application" {
+          .udm.action = "application_crash"
+          .udm.category = "application"
+          .udm.severity = "high"
+          .udm.process_name = string(event_data.param1) ?? null
+          .ext.app_version = string(event_data.param2) ?? null
+          .ext.faulting_module = string(event_data.param3) ?? null
+          .ext.faulting_module_version = string(event_data.param4) ?? null
+          .ext.exception_code = string(event_data.param5) ?? null
+      }
+
+      # === 1001 - Windows Error Reporting ===
+      if event_id == 1001 && downcase(channel) == "application" {
+          .udm.action = "error_report"
+          .udm.category = "application"
+          .ext.fault_bucket = string(event_data.param1) ?? null
+      }
+
+      # === 1002 - Application Hang ===
+      if event_id == 1002 && downcase(channel) == "application" {
+          .udm.action = "application_hang"
+          .udm.category = "application"
+          .udm.severity = "medium"
+          .udm.process_name = string(event_data.param1) ?? null
+          .ext.app_version = string(event_data.param2) ?? null
+      }
+
+      # === 10016 - DCOM Permission Error ===
+      if event_id == 10016 {
+          .udm.action = "dcom_permission_error"
+          .udm.category = "application"
+          .udm.severity = "low"
+          .udm.user_id = string(event_data.param7) ?? null
+          .ext.clsid = string(event_data.param5) ?? null
+          .ext.appid = string(event_data.param6) ?? null
+      }
+
+      # === 16384/16394 - Software Protection / Licensing ===
+      if (event_id == 16384 || event_id == 16394) && downcase(channel) == "application" {
+          .udm.action = "software_protection"
+          .udm.category = "application"
+      }
+
+      # ---------------------------------------------------------------
+      # Surface message for all events that have one
+      # ---------------------------------------------------------------
+      raw_message = string(parsed.message) ?? ""
+      if raw_message != "" && !exists(.udm.message) {
+          .udm.message = raw_message
       }
 
       # ---------------------------------------------------------------
