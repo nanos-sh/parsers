@@ -1,7 +1,7 @@
 name: windows_event
 display_name: Windows Event Log
 version: "1.0.0"
-description: "Parses Windows Event Logs from Winlogbeat JSON and NXLog JSON formats. Covers Security, System, and Application channels with specific field extraction for logon (4624/4625), process creation (4688), service install (4697/7045), Kerberos (4768/4769/4771), account management (4720-4726), group changes (4728/4732/4756), share access (5140/5145), audit log cleared (1102), and more."
+description: "Parses Windows Event Logs from Vector native windows_event_log source, Winlogbeat JSON, and NXLog JSON formats. Covers Security, System, and Application channels with specific field extraction for logon (4624/4625), process creation (4688), service install (4697/7045), Kerberos (4768/4769/4771), account management (4720-4726), group changes (4728/4732/4756), share access (5140/5145), audit log cleared (1102), and more."
 match_values:
   - windows_event
   - windows_security
@@ -19,7 +19,7 @@ vendor: "Microsoft"
 product: "Windows"
 parser_vrl: |
   # Windows Event Log Parser
-  # Supports: Winlogbeat JSON (winlog.event_id) and NXLog flattened JSON (EventID)
+  # Supports: Vector native (event_id), Winlogbeat JSON (winlog.event_id), and NXLog flattened JSON (EventID)
   .udm = {}
   .ext = {}
   .metadata = {}
