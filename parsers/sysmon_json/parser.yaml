@@ -230,31 +230,56 @@ parser_vrl: |
       }
 
       # ---------------------------------------------------------------
-      # CreateRemoteThread (Event 8)
+      # CreateRemoteThread (Event 8) & ProcessAccess (Event 10)
+      # Both use SourceImage/TargetImage instead of Image/ParentImage
       # ---------------------------------------------------------------
-      if event_id == 8 {
+      if event_id == 8 || event_id == 10 {
+          # Map source process → UDM process fields (source is the actor)
+          source_image = string(event_data.SourceImage) ?? ""
+          if source_image != "" {
+              .udm.process_path = source_image
+              parts = split(source_image, "\\")
+              if length(parts) > 0 {
+                  .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
+          .udm.pid = to_int(event_data.SourceProcessId) ?? null
+
+          # Source user → UDM user
+          source_user = string(event_data.SourceUser) ?? ""
+          if source_user != "" {
+              user_parts = split(source_user, "\\")
+              if length(user_parts) == 2 {
+                  .udm.user_domain = user_parts[0]
+                  .udm.user = user_parts[1]
+              } else {
+                  .udm.user = source_user
+              }
+          }
+
+          # Target process fields in ext (no UDM columns for target process)
           .ext.source_process_guid = string(event_data.SourceProcessGuid) ?? null
-          .ext.source_process_id = to_int(event_data.SourceProcessId) ?? null
-          .ext.source_image = string(event_data.SourceImage) ?? null
           .ext.target_process_guid = string(event_data.TargetProcessGuid) ?? null
           .ext.target_process_id = to_int(event_data.TargetProcessId) ?? null
           .ext.target_image = string(event_data.TargetImage) ?? null
+
+          # Target user
+          target_user = string(event_data.TargetUser) ?? ""
+          if target_user != "" {
+              .ext.target_user = target_user
+          }
+      }
+
+      # CreateRemoteThread-specific fields (Event 8)
+      if event_id == 8 {
           .ext.start_address = string(event_data.StartAddress) ?? null
           .ext.start_module = string(event_data.StartModule) ?? null
           .ext.start_function = string(event_data.StartFunction) ?? null
           .udm.severity = "high"
       }
 
-      # ---------------------------------------------------------------
-      # ProcessAccess (Event 10) — credential dumping detection
-      # ---------------------------------------------------------------
+      # ProcessAccess-specific fields (Event 10)
       if event_id == 10 {
-          .ext.source_process_guid = string(event_data.SourceProcessGuid) ?? null
-          .ext.source_process_id = to_int(event_data.SourceProcessId) ?? null
-          .ext.source_image = string(event_data.SourceImage) ?? null
-          .ext.target_process_guid = string(event_data.TargetProcessGuid) ?? null
-          .ext.target_process_id = to_int(event_data.TargetProcessId) ?? null
-          .ext.target_image = string(event_data.TargetImage) ?? null
           .ext.granted_access = string(event_data.GrantedAccess) ?? null
           .ext.call_trace = string(event_data.CallTrace) ?? null
 

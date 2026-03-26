@@ -74,6 +74,8 @@ parser_vrl: |
                   .udm.action = if event_id == 1 { "process_create" } else if event_id == 2 { "file_time_change" } else if event_id == 3 { "network_connection" } else if event_id == 4 { "sysmon_state_change" } else if event_id == 5 { "process_terminate" } else if event_id == 6 { "driver_load" } else if event_id == 7 { "image_load" } else if event_id == 8 { "create_remote_thread" } else if event_id == 9 { "raw_access_read" } else if event_id == 10 { "process_access" } else if event_id == 11 { "file_create" } else if event_id == 12 { "registry_event" } else if event_id == 13 { "registry_value_set" } else if event_id == 14 { "registry_rename" } else if event_id == 15 { "file_stream_create" } else if event_id == 17 { "pipe_create" } else if event_id == 18 { "pipe_connect" } else if event_id == 19 { "wmi_filter" } else if event_id == 20 { "wmi_consumer" } else if event_id == 21 { "wmi_binding" } else if event_id == 22 { "dns_query" } else if event_id == 23 { "file_delete" } else if event_id == 24 { "clipboard_change" } else if event_id == 25 { "process_tampering" } else if event_id == 26 { "file_delete_logged" } else { "sysmon_event" }
 
                   .udm.file_action = if event_id == 11 { "create" } else if event_id == 15 { "create" } else if event_id == 23 || event_id == 26 { "delete" } else if event_id == 2 { "modify" } else { null }
+
+                  .udm.category = if event_id == 1 || event_id == 5 || event_id == 25 { "process" } else if event_id == 3 { "network" } else if event_id == 22 { "dns" } else if event_id == 2 || event_id == 11 || event_id == 15 || event_id == 23 || event_id == 26 { "file" } else if event_id == 12 || event_id == 13 || event_id == 14 { "registry" } else if event_id == 6 || event_id == 7 { "driver" } else if event_id == 8 || event_id == 10 { "process_injection" } else if event_id == 9 { "raw_access" } else if event_id == 17 || event_id == 18 { "pipe" } else if event_id == 19 || event_id == 20 || event_id == 21 { "wmi" } else { "endpoint" }
               }
 
               if event_data != null {
@@ -157,6 +159,39 @@ parser_vrl: |
                               if name_str == "Details" { .udm.registry_value_data = val_str }
                               if name_str == "LogonId" { .udm.session_id = val_str }
                               if name_str == "PipeName" { .udm.object = val_str }
+
+                              # Process injection fields (Event 8: CreateRemoteThread, Event 10: ProcessAccess)
+                              if (event_id == 8 || event_id == 10) {
+                                  # Source process → UDM process fields (source is the actor)
+                                  if name_str == "SourceImage" {
+                                      .udm.process_path = val_str
+                                      parts = split(val_str, "\\")
+                                      if length(parts) > 0 {
+                                          .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+                                      }
+                                  }
+                                  if name_str == "SourceProcessId" { .udm.process_id = to_int(val_str) ?? null }
+                                  if name_str == "SourceUser" {
+                                      user_parts = split(val_str, "\\")
+                                      if length(user_parts) == 2 {
+                                          .udm.user = string!(get!(user_parts, [1]))
+                                      } else {
+                                          .udm.user = val_str
+                                      }
+                                  }
+
+                                  # Target process → ext (no UDM columns)
+                                  if name_str == "TargetImage" { .ext.target_image = val_str }
+                                  if name_str == "TargetProcessId" { .ext.target_process_id = to_int(val_str) ?? null }
+                                  if name_str == "TargetUser" { .ext.target_user = val_str }
+                                  if name_str == "SourceProcessGuid" { .ext.source_process_guid = val_str }
+                                  if name_str == "TargetProcessGuid" { .ext.target_process_guid = val_str }
+                                  if name_str == "GrantedAccess" { .ext.granted_access = val_str }
+                                  if name_str == "CallTrace" { .ext.call_trace = val_str }
+                                  if name_str == "StartAddress" { .ext.start_address = val_str }
+                                  if name_str == "StartModule" { .ext.start_module = val_str }
+                                  if name_str == "StartFunction" { .ext.start_function = val_str }
+                              }
                           }
                       }
                   }
