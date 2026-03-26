@@ -88,15 +88,9 @@ parser_vrl: |
       # Request ID (UUID - Map to string fields only)
       if exists(parsed.requestID) {
           .ext.request_id = string!(parsed.requestID)
-          .metadata.request_id = string!(parsed.requestID)
       }
 
-      # Event ID
-      if exists(parsed.eventID) {
-          .metadata.event_id = string!(parsed.eventID)
-      }
-
-      # Event Type/Category
+        # Event Type/Category
       if exists(parsed.eventType) {
           .ext.event_type = string!(parsed.eventType)
       }

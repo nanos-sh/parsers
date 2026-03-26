@@ -58,7 +58,6 @@ parser_vrl: |
       # --- Event UUID ---
       if exists(parsed.uuid) {
           .ext.event_uuid = string!(parsed.uuid)
-          .metadata.event_id = string!(parsed.uuid)
       }
 
       # --- Version ---
@@ -427,7 +426,6 @@ parser_vrl: |
 
           if exists(debug.requestId) {
               .ext.request_id = string!(debug.requestId)
-              .metadata.request_id = string!(debug.requestId)
           }
 
           if exists(debug.requestUri) {

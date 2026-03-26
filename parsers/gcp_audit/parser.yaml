@@ -51,9 +51,6 @@ parser_vrl: |
       }
 
       # Log Name / ID
-      if exists(parsed.insertId) {
-          .metadata.event_id = string!(parsed.insertId)
-      }
       if exists(parsed.logName) {
           .ext.log_name = string!(parsed.logName)
       }

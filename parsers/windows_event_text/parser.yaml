@@ -62,7 +62,6 @@ parser_vrl: |
 
               event_id = to_int(event_id_str) ?? 0
               .udm.signature_id = to_string(event_id)
-              .metadata.event_id = event_id
               .udm.src_host = computer_name
 
               if contains(downcase(event_type_str), "success") {
@@ -158,7 +157,6 @@ parser_vrl: |
       }
 
       .udm.signature_id = to_string(event_id)
-      .metadata.event_id = event_id
       .udm.src_host = computer_name
       .ext.channel = channel
       .ext.provider = provider_name
