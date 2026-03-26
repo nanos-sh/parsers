@@ -895,6 +895,15 @@ parser_vrl: |
           .ext.new_start_type = string(event_data.param3) ?? null
       }
 
+      # === 7001/7002 - Winlogon User Logon/Logoff Notification ===
+      # Logged on the LOCAL machine (System channel) — good for identity resolution
+      if event_id == 7001 || event_id == 7002 {
+          .udm.action = if event_id == 7001 { "user_logon_notification" } else { "user_logoff_notification" }
+          .udm.category = "authentication"
+          .udm.user_id = string(event_data.UserSid) ?? null
+          .ext.terminal_session_id = string(event_data.TSId) ?? null
+      }
+
       # === 7045 already handled above ===
 
       # === 1074 - System Shutdown/Restart ===
