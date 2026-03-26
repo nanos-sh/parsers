@@ -39,7 +39,7 @@ parser_vrl: |
       if upstream != "" {
           parts = split(upstream, ":")
           if length(parts) == 2 {
-              .udm.dest_ip = parts[0] ?? null
+              .udm.dest_ip = parts[0]
           }
       }
 
@@ -84,10 +84,15 @@ parser_vrl: |
 
       # Surface threat signals as comma-separated string
       if exists(parsed.threat_signals) && is_array(parsed.threat_signals) {
-          signal_names = map_values(array!(parsed.threat_signals)) -> |signal| {
-              string(signal.name) ?? "unknown"
+          signals = array!(parsed.threat_signals)
+          signal_parts = []
+          for_each(signals) -> |_i, signal| {
+              name = string(signal.name) ?? "unknown"
+              signal_parts = push(signal_parts, name)
           }
-          .ext.threat_signals = join!(signal_names, ", ")
+          if length(signal_parts) > 0 {
+              .ext.threat_signals = join!(signal_parts, ", ")
+          }
       }
 
       # Set severity based on threat score
@@ -126,7 +131,10 @@ parser_vrl: |
       # ---------------------------------------------------------------
       .udm.vendor = "Conduit"
       .udm.product = "Conduit Proxy"
-      .udm.signature_id = to_string(parsed.status_code) ?? null
+      status_code_val = to_int(parsed.status_code) ?? 0
+      if status_code_val > 0 {
+          .udm.signature_id = to_string(status_code_val)
+      }
 
   } else {
       .metadata.parse_error = to_string(err)
