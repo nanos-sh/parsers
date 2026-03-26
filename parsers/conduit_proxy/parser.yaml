@@ -124,7 +124,7 @@ parser_vrl: |
       .ext.cache_status = string(parsed.cache_status) ?? null
       .ext.rule_id = string(parsed.rule_id) ?? null
       .ext.category = string(parsed.category) ?? null
-      .ext.upstream_addr = string(parsed.upstream_addr) ?? null
+      # upstream_addr already extracted to udm.dest_ip above
 
       # ---------------------------------------------------------------
       # Vendor/product
