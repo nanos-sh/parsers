@@ -364,12 +364,12 @@ parser_vrl: |
               }
           }
 
-          .udm.process = string(event_data.CommandLine) ?? null
+          .udm.command_line = string(event_data.CommandLine) ?? null
 
           parent_process = string(event_data.ParentProcessName) ?? ""
           if parent_process != "" {
               .udm.parent_process_path = parent_process
-              .udm.parent_process = parent_process
+              .udm.parent_command_line = parent_process
               parts = split(parent_process, "\\")
               if length(parts) > 0 {
                   .udm.parent_process_name = get(parts, [length(parts) - 1]) ?? null

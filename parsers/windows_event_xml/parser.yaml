@@ -405,12 +405,12 @@ parser_vrl: |
               }
 
               val = to_string(event_data.CommandLine)
-              if val != "" { .udm.process = val }
+              if val != "" { .udm.command_line = val }
 
               parent_process = to_string(event_data.ParentProcessName)
               if parent_process != "" {
                   .udm.parent_process_path = parent_process
-                  .udm.parent_process = parent_process
+                  .udm.parent_command_line = parent_process
                   parts = split(parent_process, "\\")
                   if length(parts) > 0 {
                       .udm.parent_process_name = get(parts, [length(parts) - 1]) ?? null

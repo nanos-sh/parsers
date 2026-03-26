@@ -443,12 +443,12 @@ parser_vrl: |
               }
           }
 
-          .udm.process = string(get!(body_fields, ["Process Information.Process Command Line"])) ?? null
+          .udm.command_line = string(get!(body_fields, ["Process Information.Process Command Line"])) ?? null
 
           parent_process = string(get!(body_fields, ["Process Information.Creator Process Name"])) ?? ""
           if parent_process != "" {
               .udm.parent_process_path = parent_process
-              .udm.parent_process = parent_process
+              .udm.parent_command_line = parent_process
               parts = split(parent_process, "\\")
               if length(parts) > 0 {
                   .udm.parent_process_name = get(parts, [length(parts) - 1]) ?? null

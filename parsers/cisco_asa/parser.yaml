@@ -556,7 +556,7 @@ parser_vrl: |
           cmd_match, cmd_err = parse_regex(msg_body, r'User\s+.(?P<user>[^.]+).\s+executed\s+the\s+.(?P<command>[^.]+).\s+command')
           if cmd_err == null && cmd_match != null {
               .udm.user = string!(cmd_match.user)
-              .udm.process = string!(cmd_match.command)
+              .udm.command_line = string!(cmd_match.command)
           }
 
           .ext.asa_message_desc = "User executed command"      # ----------------------------------------------------------

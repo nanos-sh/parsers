@@ -113,8 +113,8 @@ parser_vrl: |
                               }
                               if name_str == "ParentProcessId" { .udm.parent_process_id = to_int(val_str) ?? null }
                               if name_str == "ParentProcessGuid" { .udm.parent_process_guid = val_str }
-                              if name_str == "ParentCommandLine" { .udm.parent_process = val_str }
-                              if name_str == "CommandLine" { .udm.process = val_str }
+                              if name_str == "ParentCommandLine" { .udm.parent_command_line = val_str }
+                              if name_str == "CommandLine" { .udm.command_line = val_str }
                               if name_str == "CurrentDirectory" { .udm.process_current_directory = val_str }
                               if name_str == "IntegrityLevel" { .udm.process_integrity_level = val_str }
                               if name_str == "SourceIp" { .udm.src_ip = val_str }

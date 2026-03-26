@@ -81,7 +81,7 @@ parser_vrl: |
               }
           }
           if exists(parsed.InitiatingProcessCommandLine) {
-              .udm.process = string!(parsed.InitiatingProcessCommandLine)
+              .udm.command_line = string!(parsed.InitiatingProcessCommandLine)
           }
           if exists(parsed.InitiatingProcessCreationTime) {
               ts, ts_err = parse_timestamp(string!(parsed.InitiatingProcessCreationTime), "%+")
@@ -158,7 +158,7 @@ parser_vrl: |
               .udm.process_id = to_int(parsed.ProcessId) ?? null
           }
           if exists(parsed.ProcessCommandLine) {
-              .udm.process = string!(parsed.ProcessCommandLine)
+              .udm.command_line = string!(parsed.ProcessCommandLine)
           }
           if exists(parsed.ProcessIntegrityLevel) {
               .ext.process_integrity_level = string!(parsed.ProcessIntegrityLevel)
@@ -200,7 +200,7 @@ parser_vrl: |
               }
           }
           if exists(parsed.InitiatingProcessCommandLine) {
-              .udm.parent_process = string!(parsed.InitiatingProcessCommandLine)
+              .udm.parent_command_line = string!(parsed.InitiatingProcessCommandLine)
           }
           if exists(parsed.InitiatingProcessCreationTime) {
               ts, ts_err = parse_timestamp(string!(parsed.InitiatingProcessCreationTime), "%+")
@@ -256,7 +256,7 @@ parser_vrl: |
               }
           }
           if exists(parsed.InitiatingProcessCommandLine) {
-              .udm.process = string!(parsed.InitiatingProcessCommandLine)
+              .udm.command_line = string!(parsed.InitiatingProcessCommandLine)
           }
           if exists(parsed.InitiatingProcessCreationTime) {
               ts, ts_err = parse_timestamp(string!(parsed.InitiatingProcessCreationTime), "%+")

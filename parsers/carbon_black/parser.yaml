@@ -59,7 +59,7 @@ parser_vrl: |
       if exists(parsed.process_name) { .udm.process_name = to_string(parsed.process_name) ?? null }
       if exists(parsed.process_path) { .udm.process_path = to_string(parsed.process_path) ?? null }
       if exists(parsed.process_sha256) { .udm.process_hash = to_string(parsed.process_sha256) ?? null }
-      if exists(parsed.process_cmdline) { .udm.process = to_string(parsed.process_cmdline) ?? null }
+      if exists(parsed.process_cmdline) { .udm.command_line = to_string(parsed.process_cmdline) ?? null }
       if exists(parsed.process_pid) { .udm.process_id = to_string(parsed.process_pid) ?? null }
       if exists(parsed.process_guid) { .udm.process_guid = to_string(parsed.process_guid) ?? null }
 
@@ -67,7 +67,7 @@ parser_vrl: |
       if exists(parsed.parent_name) { .udm.parent_process_name = to_string(parsed.parent_name) ?? null }
       if exists(parsed.parent_path) { .udm.parent_process_path = to_string(parsed.parent_path) ?? null }
       if exists(parsed.parent_sha256) { .ext.parent_sha256 = to_string(parsed.parent_sha256) ?? null }
-      if exists(parsed.parent_cmdline) { .udm.parent_process = to_string(parsed.parent_cmdline) ?? null }
+      if exists(parsed.parent_cmdline) { .udm.parent_command_line = to_string(parsed.parent_cmdline) ?? null }
       if exists(parsed.parent_pid) { .udm.parent_process_id = to_string(parsed.parent_pid) ?? null }
       if exists(parsed.parent_guid) { .ext.parent_guid = to_string(parsed.parent_guid) ?? null }
 

@@ -186,7 +186,7 @@ parser_vrl: |
               }
           }
           if exists(parsed.CommandLine) {
-              .udm.process = to_string(parsed.CommandLine) ?? null
+              .udm.command_line = to_string(parsed.CommandLine) ?? null
           }
           if exists(parsed.RawProcessId) {
               .udm.process_id = to_int(parsed.RawProcessId) ?? null
@@ -770,7 +770,7 @@ parser_vrl: |
               .udm.process_path = to_string(parsed.FilePath) ?? null
           }
           if exists(parsed.CommandLine) {
-              .udm.process = to_string(parsed.CommandLine) ?? null
+              .udm.command_line = to_string(parsed.CommandLine) ?? null
           }
           if exists(parsed.SHA256String) {
               sha256 = to_string(parsed.SHA256String) ?? ""
@@ -821,7 +821,7 @@ parser_vrl: |
               }
           }
           if exists(parsed.ParentCommandLine) {
-              .udm.parent_process = to_string(parsed.ParentCommandLine) ?? null
+              .udm.parent_command_line = to_string(parsed.ParentCommandLine) ?? null
           }
           if exists(parsed.ProcessStartTime) {
               pst_float = to_float(to_string(parsed.ProcessStartTime) ?? "") ?? null
@@ -929,7 +929,7 @@ parser_vrl: |
               .ext.task_name = to_string(parsed.TaskName) ?? null
           }
           if exists(parsed.TaskExecCommand) {
-              .udm.process = to_string(parsed.TaskExecCommand) ?? null
+              .udm.command_line = to_string(parsed.TaskExecCommand) ?? null
           }
           if exists(parsed.TaskExecArguments) {
               .ext.task_exec_arguments = to_string(parsed.TaskExecArguments) ?? null
@@ -1012,7 +1012,7 @@ parser_vrl: |
               }
           }
           if exists(parsed.CommandLine) {
-              .udm.process = to_string(parsed.CommandLine) ?? null
+              .udm.command_line = to_string(parsed.CommandLine) ?? null
           }
           if exists(parsed.RawProcessId) {
               .udm.process_id = to_int(parsed.RawProcessId) ?? null
@@ -1084,7 +1084,7 @@ parser_vrl: |
               }
           }
           if exists(parsed.CommandLine) {
-              .udm.process = to_string(parsed.CommandLine) ?? null
+              .udm.command_line = to_string(parsed.CommandLine) ?? null
           }
           if exists(parsed.UserSid) {
               .udm.user_id = to_string(parsed.UserSid) ?? null

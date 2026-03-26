@@ -165,7 +165,7 @@ parser_vrl: |
 
                       cmdline = get(kv, ["CommandLine"]) ?? null
                       if cmdline != null {
-                          .udm.process = string!(cmdline)
+                          .udm.command_line = string!(cmdline)
                       }
 
                       curdir = get(kv, ["CurrentDirectory"]) ?? null
@@ -201,7 +201,7 @@ parser_vrl: |
 
                       pcmd = get(kv, ["ParentCommandLine"]) ?? null
                       if pcmd != null {
-                          .udm.parent_process = string!(pcmd)
+                          .udm.parent_command_line = string!(pcmd)
                       }
 
                       puser = get(kv, ["ParentUser"]) ?? null

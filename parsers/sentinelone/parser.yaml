@@ -202,7 +202,7 @@ parser_vrl: |
           # Process fields (common across DV types)
           if exists(parsed.ProcessName) { .udm.process_name = to_string(parsed.ProcessName) ?? null }
           if exists(parsed.ProcessImagePath) { .udm.process_path = to_string(parsed.ProcessImagePath) ?? null }
-          if exists(parsed.ProcessCommandLine) { .udm.process = to_string(parsed.ProcessCommandLine) ?? null }
+          if exists(parsed.ProcessCommandLine) { .udm.command_line = to_string(parsed.ProcessCommandLine) ?? null }
           if exists(parsed.ProcessId) { .udm.process_id = to_string(parsed.ProcessId) ?? null }
 
           if exists(parsed.Sha256) { .udm.process_hash = to_string(parsed.Sha256) ?? null }
@@ -212,7 +212,7 @@ parser_vrl: |
           # Parent process
           if exists(parsed.ParentProcessName) { .udm.parent_process_name = to_string(parsed.ParentProcessName) ?? null }
           if exists(parsed.ParentProcessImagePath) { .udm.parent_process_path = to_string(parsed.ParentProcessImagePath) ?? null }
-          if exists(parsed.ParentProcessCommandLine) { .udm.parent_process = to_string(parsed.ParentProcessCommandLine) ?? null }
+          if exists(parsed.ParentProcessCommandLine) { .udm.parent_command_line = to_string(parsed.ParentProcessCommandLine) ?? null }
           if exists(parsed.ParentProcessId) { .udm.parent_process_id = to_string(parsed.ParentProcessId) ?? null }
 
           # Timestamp from ProcessStartTime

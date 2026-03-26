@@ -92,7 +92,7 @@ parser_vrl: |
       # Command line (Event 1)
       cmd = string(event_data.CommandLine) ?? ""
       if cmd != "" {
-          .udm.process = cmd
+          .udm.command_line = cmd
       }
 
       # Parent process (Event 1)
@@ -109,7 +109,7 @@ parser_vrl: |
 
       parent_cmd = string(event_data.ParentCommandLine) ?? ""
       if parent_cmd != "" {
-          .udm.parent_process = parent_cmd
+          .udm.parent_command_line = parent_cmd
       }
 
       # Current directory and integrity level

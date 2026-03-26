@@ -193,7 +193,7 @@ parser_vrl: |
                   if sudo_err == null {
                       .udm.user = string!(sudo_match.user)
                       .udm.dest_user = string!(sudo_match.target_user)
-                      .udm.process = string!(sudo_match.command)
+                      .udm.command_line = string!(sudo_match.command)
                       .ext.tty = string!(sudo_match.tty)
                       .ext.working_directory = string!(sudo_match.pwd)
                       .udm.action = "sudo"

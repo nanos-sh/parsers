@@ -124,7 +124,7 @@ parser_vrl: |
               args = push(args, a4_val)
           }
           if length(args) > 0 {
-              .udm.process = join!(args, " ")
+              .udm.command_line = join!(args, " ")
               first_arg = get!(args, [0])
               if first_arg != null {
                   .udm.process_name = to_string!(first_arg)

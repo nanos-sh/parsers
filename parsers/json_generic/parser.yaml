@@ -67,7 +67,7 @@ parser_vrl: |
       if exists(parsed.dvc) { .udm.dvc = parsed.dvc } else if exists(parsed.device) { .udm.dvc = parsed.device }
 
       # --- Process Fields ---
-      if exists(parsed.process) { .udm.process = parsed.process } else if exists(parsed.command_line) { .udm.process = parsed.command_line } else if exists(parsed.cmdline) { .udm.process = parsed.cmdline }
+      if exists(parsed.process) { .udm.command_line = parsed.process } else if exists(parsed.command_line) { .udm.command_line = parsed.command_line } else if exists(parsed.cmdline) { .udm.command_line = parsed.cmdline }
 
       if exists(parsed.process_name) { .udm.process_name = parsed.process_name } else if exists(parsed.image) { .udm.process_name = parsed.image }
 
