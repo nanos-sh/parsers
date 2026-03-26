@@ -1102,7 +1102,7 @@ parser_vrl: |
       del(.provider_guid)
       del(.qualifiers)
       del(.string_inserts)
-      del(.message)
+      # Note: do NOT del(.message) — it's the raw log stored in the message column
 
       # ---------------------------------------------------------------
       # Severity mapping from Windows keywords/levels
