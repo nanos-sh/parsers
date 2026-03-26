@@ -322,7 +322,12 @@ parser_vrl: |
           .udm.user_domain = string(event_data.SubjectDomainName) ?? null
           .udm.user_id = string(event_data.SubjectUserSid) ?? null
           .udm.session_id = string(event_data.SubjectLogonId) ?? null
-          .ext.privileges = string(event_data.PrivilegeList) ?? null
+          raw_privs = string(event_data.PrivilegeList) ?? ""
+          if raw_privs != "" {
+              parts = split(raw_privs, r'\s+')
+              cleaned = filter(parts) -> |_i, v| { v != "" }
+              .ext.privileges = join!(cleaned, ", ")
+          }
       }
 
       # === 4688 - Process Creation ===
