@@ -303,15 +303,18 @@ parser_vrl: |
           .ext.logon_type = logon_type_str
       }
 
-      # === 4648 - Explicit Credentials ===
+      # === 4648 - Explicit Credentials (runas, PsExec, lateral movement) ===
       if event_id == 4648 {
           .udm.action = "explicit_credentials"
           .udm.category = "authentication"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
           .udm.src_user = string(event_data.SubjectUserName) ?? null
           .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
           .udm.dest_user = string(event_data.TargetUserName) ?? null
           .udm.dest_nt_domain = string(event_data.TargetDomainName) ?? null
           .udm.dest_host = string(event_data.TargetServerName) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
           .ext.target_info = string(event_data.TargetInfo) ?? null
           .ext.subject_logon_id = string(event_data.SubjectLogonId) ?? null
 
@@ -325,6 +328,9 @@ parser_vrl: |
           }
 
           ip_addr = string(event_data.IpAddress) ?? ""
+          if starts_with(ip_addr, "::ffff:") {
+              ip_addr = slice!(ip_addr, 7)
+          }
           if ip_addr != "" && ip_addr != "-" {
               .udm.src_ip = ip_addr
           }
@@ -438,14 +444,26 @@ parser_vrl: |
           .ext.service_account = string(event_data.ServiceAccount) ?? null
       }
 
-      # === 7045 - Service Installed (System log) ===
+      # === 7045 - Service Installed (System log) — persistence indicator ===
       if event_id == 7045 {
           .udm.action = "service_installed"
           .udm.category = "service"
-          .udm.service_name = string(event_data.ServiceName) ?? null
-          .udm.service_path = string(event_data.ImagePath) ?? null
+          .udm.severity = "medium"
+          .ext.service_name = string(event_data.ServiceName) ?? null
+          image_path = string(event_data.ImagePath) ?? ""
+          if image_path != "" {
+              .udm.process_path = image_path
+              parts = split(image_path, "\\")
+              if length(parts) > 0 {
+                  .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
           .ext.service_type = string(event_data.ServiceType) ?? null
           .ext.service_start_type = string(event_data.StartType) ?? null
+          account_name = string(event_data.AccountName) ?? ""
+          if account_name != "" {
+              .udm.user = account_name
+          }
           .ext.service_account = string(event_data.AccountName) ?? null
       }
 
@@ -615,6 +633,38 @@ parser_vrl: |
           .ext.ticket_options = string(event_data.TicketOptions) ?? null
           .ext.logon_guid = string(event_data.LogonGuid) ?? null
           .ext.transmitted_services = string(event_data.TransmittedServices) ?? null
+
+          enc_type = downcase(string(event_data.TicketEncryptionType) ?? "")
+          .ext.ticket_encryption_type_raw = enc_type
+          .ext.ticket_encryption = if enc_type == "0x17" { "RC4-HMAC (potentially Kerberoasting)" } else if enc_type == "0x12" { "AES256" } else if enc_type == "0x11" { "AES128" } else if enc_type == "0x18" { "RC4-HMAC-EXP" } else if enc_type == "0x3" { "DES-CBC-MD5" } else if enc_type == "0x1" { "DES-CBC-CRC" } else { enc_type }
+
+          ip_addr = string(event_data.IpAddress) ?? ""
+          if starts_with(ip_addr, "::ffff:") {
+              ip_addr = slice!(ip_addr, 7)
+          }
+          if ip_addr != "" && ip_addr != "-" {
+              .udm.src_ip = ip_addr
+          }
+          ip_port = string(event_data.IpPort) ?? ""
+          if ip_port != "" && ip_port != "0" {
+              .udm.src_port = to_int(ip_port) ?? null
+          }
+      }
+
+      # === 4770 - Kerberos Service Ticket Renewed (TGS renewal) ===
+      if event_id == 4770 {
+          .udm.action = "kerberos_ticket_renewed"
+          .udm.category = "authentication"
+          .udm.auth_type = "Kerberos"
+          .udm.auth_result = "success"
+          .udm.dest_host = computer_name
+          .udm.src_host = null
+          .udm.user = string(event_data.TargetUserName) ?? null
+          .udm.user_domain = string(event_data.TargetDomainName) ?? null
+
+          .ext.service_name = string(event_data.ServiceName) ?? null
+          .ext.service_sid = string(event_data.ServiceSid) ?? null
+          .ext.ticket_options = string(event_data.TicketOptions) ?? null
 
           enc_type = downcase(string(event_data.TicketEncryptionType) ?? "")
           .ext.ticket_encryption_type_raw = enc_type
@@ -967,6 +1017,30 @@ parser_vrl: |
           .ext.access_mask = string(event_data.AccessMask) ?? null
       }
 
+      # === 4907 - Auditing Settings Changed on Object ===
+      if event_id == 4907 {
+          .udm.action = "audit_settings_changed"
+          .udm.category = "policy"
+          .udm.severity = "medium"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .ext.object_name = string(event_data.ObjectName) ?? null
+          .ext.object_type = string(event_data.ObjectType) ?? null
+          .ext.handle_id = string(event_data.HandleId) ?? null
+          .ext.old_sd = string(event_data.OldSd) ?? null
+          .ext.new_sd = string(event_data.NewSd) ?? null
+
+          process_name_full = string(event_data.ProcessName) ?? ""
+          if process_name_full != "" {
+              .udm.process_path = process_name_full
+              parts = split(process_name_full, "\\")
+              if length(parts) > 0 {
+                  .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
+      }
+
       # === 4738 - User Account Changed ===
       if event_id == 4738 {
           .udm.action = "account_changed"
@@ -998,6 +1072,31 @@ parser_vrl: |
           .udm.src_nt_domain = string(event_data.SubjectDomainName) ?? null
       }
 
+      # === 4798 - User's Local Group Membership Enumerated ===
+      if event_id == 4798 {
+          .udm.action = "user_group_membership_enumerated"
+          .udm.category = "reconnaissance"
+          .udm.user = string(event_data.SubjectUserName) ?? null
+          .udm.user_domain = string(event_data.SubjectDomainName) ?? null
+          .udm.session_id = string(event_data.SubjectLogonId) ?? null
+          .udm.dest_user = string(event_data.TargetUserName) ?? null
+          .ext.target_domain = string(event_data.TargetDomainName) ?? null
+          .ext.target_sid = string(event_data.TargetSid) ?? null
+
+          process_name_full = string(event_data.CallerProcessName) ?? ""
+          if process_name_full != "" && process_name_full != "-" {
+              .udm.process_path = process_name_full
+              parts = split(process_name_full, "\\")
+              if length(parts) > 0 {
+                  .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
+          pid_str = string(event_data.CallerProcessId) ?? ""
+          if pid_str != "" {
+              .udm.process_id = to_int(pid_str) ?? null
+          }
+      }
+
       # === 4799 - Security Group Membership Enumerated ===
       if event_id == 4799 {
           .udm.action = "group_membership_enumerated"
@@ -1008,6 +1107,19 @@ parser_vrl: |
           .ext.target_user = string(event_data.TargetUserName) ?? null
           .ext.target_domain = string(event_data.TargetDomainName) ?? null
           .ext.target_sid = string(event_data.TargetSid) ?? null
+
+          process_name_full = string(event_data.CallerProcessName) ?? ""
+          if process_name_full != "" && process_name_full != "-" {
+              .udm.process_path = process_name_full
+              parts = split(process_name_full, "\\")
+              if length(parts) > 0 {
+                  .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
+          pid_str = string(event_data.CallerProcessId) ?? ""
+          if pid_str != "" {
+              .udm.process_id = to_int(pid_str) ?? null
+          }
       }
 
       # === 5058/5059 - Key File/Migration Operation ===
@@ -1125,9 +1237,20 @@ parser_vrl: |
       if event_id == 4104 {
           .udm.action = "powershell_script_block"
           .udm.category = "process"
+          script_text = string(event_data.ScriptBlockText) ?? ""
+          if script_text != "" {
+              .udm.command_line = script_text
+          }
           .ext.script_block_text = string(event_data.ScriptBlockText) ?? null
           .ext.script_block_id = string(event_data.ScriptBlockId) ?? null
-          .ext.path = string(event_data.Path) ?? null
+          script_path = string(event_data.Path) ?? ""
+          if script_path != "" {
+              .udm.process_path = script_path
+              parts = split(script_path, "\\")
+              if length(parts) > 0 {
+                  .udm.process_name = get(parts, [length(parts) - 1]) ?? null
+              }
+          }
           .udm.severity = "low"
       }
       if event_id == 4103 {
