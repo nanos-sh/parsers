@@ -230,7 +230,7 @@ parser_vrl: |
           }
           if exists(nano.resourceName) {
               rn = string!(nano.resourceName)
-              if !exists(.udm.resource_name) || (to_string(.udm.resource_name) ?? "") == "" {
+              if !exists(.udm.resource_name) || to_string(.udm.resource_name) == "" {
                   .udm.resource_name = rn
               }
           }
