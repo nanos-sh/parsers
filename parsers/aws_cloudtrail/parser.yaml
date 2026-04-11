@@ -1,6 +1,6 @@
 name: aws_cloudtrail
 display_name: AWS CloudTrail
-version: "1.2.0"
+version: "1.3.0"
 description: "Parses AWS CloudTrail JSON events including API calls, user identity, resources, and error tracking"
 match_values:
   - aws_cloudtrail
@@ -103,11 +103,34 @@ parser_vrl: |
           identity = parsed.userIdentity
 
           # User / Principal
+          # IMPORTANT: Never map the full ARN to .udm.user — assumed-role ARNs
+          # include a random session suffix (e.g., session-abc123) that creates
+          # 780K+ "unique users" and OOMs GROUP BY queries.
+          # Priority: userName (stable) > role name extracted from ARN > accountId
           if exists(identity.arn) {
-              .udm.user = string!(identity.arn)
               .ext.user_arn = string!(identity.arn)
-          } else if exists(identity.userName) {
+          }
+          if exists(identity.userName) {
               .udm.user = string!(identity.userName)
+          } else if exists(identity.arn) {
+              # Extract stable identity from ARN:
+              # arn:aws:sts::123:assumed-role/role-name/session-xxx → "role-name"
+              # arn:aws:iam::123:user/john.smith → "john.smith"
+              # arn:aws:iam::123:root → "root"
+              arn_str = string!(identity.arn)
+              arn_parts = split(arn_str, "/")
+              if length(arn_parts) >= 2 {
+                  # For assumed-role: parts = ["arn:aws:sts::123:assumed-role", "role-name", "session-xxx"]
+                  # For user: parts = ["arn:aws:iam::123:user", "username"]
+                  # Take the second segment (role name or username), never the session suffix
+                  .udm.user = arn_parts[1]
+              } else {
+                  # Fallback for ARNs like arn:aws:iam::123:root (no slash)
+                  arn_colon_parts = split(arn_str, ":")
+                  if length(arn_colon_parts) >= 6 {
+                      .udm.user = arn_colon_parts[5]
+                  }
+              }
           }
 
           # Account ID & Namespace
