@@ -166,8 +166,10 @@ parser_vrl: |
           if length(resources) > 0 {
               res = resources[0]
               if exists(res.ARN) {
-                  .udm.object = string!(res.ARN)
-                  .ext.resource_arn = string!(res.ARN)
+                  arn_val = string!(res.ARN)
+                  .udm.object = arn_val
+                  .udm.resource_id = arn_val
+                  .ext.resource_arn = arn_val
               }
               if exists(res.type) {
                   .udm.resource_type = string!(res.type)
@@ -201,7 +203,7 @@ parser_vrl: |
 
           if exists(data.MFAUsed) {
               mfa = string!(data.MFAUsed)
-              .udm.mfa_used = if downcase(mfa) == "yes" { "true" } else { "false" }
+              .udm.mfa_used = if downcase(mfa) == "yes" { 1 } else { 0 }
           }
 
           if exists(data.AuthenticationMethod) {
@@ -225,6 +227,12 @@ parser_vrl: |
           }
           if exists(nano.changeType) {
               .udm.change_type = string!(nano.changeType)
+          }
+          if exists(nano.resourceName) {
+              rn = string!(nano.resourceName)
+              if !exists(.udm.resource_name) || (to_string(.udm.resource_name) ?? "") == "" {
+                  .udm.resource_name = rn
+              }
           }
           if exists(nano.status) {
               status_val = downcase(string!(nano.status))
