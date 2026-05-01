@@ -29,7 +29,7 @@ parser_vrl: |
           msg = string(parsed.fields.message) ?? ""
           target = string(parsed.target) ?? ""
 
-          .udm.action = if level == "error" { "proxy_error" } else if level == "warn" { "proxy_warning" } else { "proxy_info" }
+          .udm.event_type = if level == "error" { "proxy_error" } else if level == "warn" { "proxy_warning" } else { "proxy_info" }
           .udm.category = "web_proxy"
           .udm.vendor = "Conduit"
           .udm.product = "Conduit Proxy"
@@ -106,13 +106,13 @@ parser_vrl: |
       # Action and category
       # ---------------------------------------------------------------
       action_raw = string(parsed.action) ?? "unknown"
-      .udm.action = action_raw
+      .udm.event_type = action_raw
       .udm.category = "web_proxy"
 
       # Blocked requests get elevated severity
       threat_blocked = bool(parsed.threat_blocked) ?? false
       if threat_blocked {
-          .udm.action = "blocked"
+          .udm.event_type = "blocked"
           .udm.severity = "high"
       }
 

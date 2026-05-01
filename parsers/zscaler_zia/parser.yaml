@@ -156,7 +156,7 @@ parser_vrl: |
           if exists(evt.location) { .ext.location = string!(evt.location) }
 
           # Action / Status
-          if exists(evt.action) { .udm.action = downcase(string!(evt.action)) }
+          if exists(evt.action) { .udm.event_type = downcase(string!(evt.action)) }
           if exists(evt.reason) { .udm.result = string!(evt.reason) }
           if exists(evt.recordid) { .ext.record_id = string!(evt.recordid) }
 
@@ -298,7 +298,7 @@ parser_vrl: |
           if exists(evt.locationname) { .ext.location = string!(evt.locationname) }
 
           # Action
-          if exists(evt.action) { .udm.action = downcase(string!(evt.action)) }
+          if exists(evt.action) { .udm.event_type = downcase(string!(evt.action)) }
 
           # Rules
           if exists(evt.rule) { .udm.rule_name = string!(evt.rule) }
@@ -379,7 +379,7 @@ parser_vrl: |
           if exists(evt.reqaction) {
               req_act = string!(evt.reqaction)
               .ext.request_action = req_act
-              if contains(downcase(req_act), "allow") { .udm.action = "allowed" } else if contains(downcase(req_act), "block") { .udm.action = "blocked" } else { .udm.action = downcase(req_act) }
+              if contains(downcase(req_act), "allow") { .udm.event_type = "allowed" } else if contains(downcase(req_act), "block") { .udm.event_type = "blocked" } else { .udm.event_type = downcase(req_act) }
           }
           if exists(evt.resaction) { .ext.response_action = string!(evt.resaction) }
 
@@ -477,8 +477,8 @@ parser_vrl: |
           if exists(evt.dept) { .ext.department = string!(evt.dept) }
 
           # Action / Policy
-          if exists(evt.actiontaken) { .udm.action = downcase(string!(evt.actiontaken)) }
-          if exists(evt.action) { .udm.action = downcase(string!(evt.action)) }
+          if exists(evt.actiontaken) { .udm.event_type = downcase(string!(evt.actiontaken)) }
+          if exists(evt.action) { .udm.event_type = downcase(string!(evt.action)) }
           if exists(evt.dlpeng) { .ext.dlp_engine = string!(evt.dlpeng) }
           if exists(evt.dlpdict) { .ext.dlp_dictionary = string!(evt.dlpdict) }
           if exists(evt.dlpdicthitcount) { .ext.dlp_dictionary_hit_count = to_int(evt.dlpdicthitcount) ?? null }
@@ -531,7 +531,7 @@ parser_vrl: |
           if exists(evt.admin) { .udm.user = string!(evt.admin) }
 
           # Action
-          if exists(evt.action) { .udm.action = downcase(string!(evt.action)) }
+          if exists(evt.action) { .udm.event_type = downcase(string!(evt.action)) }
           if exists(evt.category) { .udm.category = string!(evt.category) }
           if exists(evt.subcategory) { .ext.subcategory = string!(evt.subcategory) }
           if exists(evt.result) { .udm.result = string!(evt.result) }
@@ -561,7 +561,7 @@ parser_vrl: |
           # Best-effort extraction of common fields
           if exists(evt.user) { .udm.user = string!(evt.user) } else if exists(evt.login) { .udm.user = string!(evt.login) }
 
-          if exists(evt.action) { .udm.action = downcase(string!(evt.action)) }
+          if exists(evt.action) { .udm.event_type = downcase(string!(evt.action)) }
           if exists(evt.category) { .udm.category = string!(evt.category) }
 
           if exists(evt.cltip) { .udm.src_ip = string!(evt.cltip) } else if exists(evt.csip) { .udm.src_ip = string!(evt.csip) } else if exists(evt.sourceip) { .udm.src_ip = string!(evt.sourceip) } else if exists(evt.clientip) { .udm.src_ip = string!(evt.clientip) }

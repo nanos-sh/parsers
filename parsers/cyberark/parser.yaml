@@ -65,7 +65,7 @@ parser_vrl: |
               # act (action)
               act_val = to_string(kv.act) ?? ""
               if act_val != "" {
-                  .udm.action = act_val
+                  .udm.event_type = act_val
               }
 
               # suser (source user)
@@ -156,7 +156,7 @@ parser_vrl: |
           .udm.category = "privileged_access"
 
           if exists(parsed.action) {
-              .udm.action = string!(parsed.action)
+              .udm.event_type = string!(parsed.action)
           }
           if exists(parsed.user) {
               .udm.user = string!(parsed.user)

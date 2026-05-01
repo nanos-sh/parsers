@@ -48,7 +48,7 @@ parser_vrl: |
       .ext.action_type = action_type
       # Process events based on ActionType
       if action_type == "ConnectionSuccess" {
-          .udm.action = "network_connection"
+          .udm.event_type = "network_connection"
           if exists(parsed.RemoteIP) {
               .udm.dest_ip = string!(parsed.RemoteIP)
           }
@@ -96,7 +96,7 @@ parser_vrl: |
               .udm.user = string!(parsed.InitiatingProcessAccountName)
           }
       } else if action_type == "NetworkInfo" {
-          .udm.action = "network_info"
+          .udm.event_type = "network_info"
           if exists(parsed.NetworkAdapterName) {
               .ext.network_adapter_name = string!(parsed.NetworkAdapterName)
           }
@@ -135,7 +135,7 @@ parser_vrl: |
               .ext.network_adapter_status = string!(parsed.NetworkAdapterStatus)
           }
       } else if action_type == "ProcessCreated" {
-          .udm.action = "process_create"
+          .udm.event_type = "process_create"
           if exists(parsed.FileName) {
               .udm.process_name = string!(parsed.FileName)
           }
@@ -215,7 +215,7 @@ parser_vrl: |
               .ext.parent_user = string!(parsed.InitiatingProcessAccountName)
           }
       } else if action_type == "FileCreated" {
-          .udm.action = "file_create"
+          .udm.event_type = "file_create"
           .udm.file_action = "created"
           if exists(parsed.FileName) {
               .udm.file_path = string!(parsed.FileName)
@@ -271,7 +271,7 @@ parser_vrl: |
               .udm.user = string!(parsed.InitiatingProcessAccountName)
           }
       } else if action_type == "LogonSuccess" {
-          .udm.action = "login"
+          .udm.event_type = "login"
           .udm.status = "success"
           if exists(parsed.LogonType) {
               .udm.auth_type = string!(parsed.LogonType)
@@ -304,12 +304,12 @@ parser_vrl: |
               .ext.is_local_admin = parsed.IsLocalAdmin
           }
       } else {
-          .udm.action = downcase(action_type)
+          .udm.event_type = downcase(action_type)
       }
   } else {
       .metadata.parse_error = to_string(err)
       .udm.timestamp = now()
-      .udm.action = "unknown"
+      .udm.event_type = "unknown"
   }
   if !exists(.udm.timestamp) {
       .udm.timestamp = now()

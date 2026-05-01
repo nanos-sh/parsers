@@ -62,7 +62,7 @@ parser_vrl: |
           .udm.file_path = to_string(parsed.filePath) ?? null
           .udm.src_host = to_string(parsed.agentComputerName) ?? null
           .udm.src_ip = to_string(parsed.agentIp) ?? null
-          .udm.action = to_string(parsed.mitigationStatus) ?? null
+          .udm.event_type = to_string(parsed.mitigationStatus) ?? null
 
           if exists(parsed.fileSize) {
               .udm.file_size = to_int(parsed.fileSize) ?? null
@@ -250,20 +250,20 @@ parser_vrl: |
 
           # Dispatch on DV event type for action
           if contains(dv_type, "process") {
-              .udm.action = "process_created"
+              .udm.event_type = "process_created"
           } else if contains(dv_type, "network") {
-              .udm.action = "network_connection"
+              .udm.event_type = "network_connection"
           } else if contains(dv_type, "dns") {
-              .udm.action = "dns_query"
+              .udm.event_type = "dns_query"
           } else if contains(dv_type, "file") {
-              .udm.action = "file_modified"
+              .udm.event_type = "file_modified"
               if exists(parsed.FilePath) { .udm.file_path = to_string(parsed.FilePath) ?? null }
           } else if contains(dv_type, "registry") {
-              .udm.action = "registry_modified"
+              .udm.event_type = "registry_modified"
               if exists(parsed.RegistryPath) { .ext.registry_path = to_string(parsed.RegistryPath) ?? null }
               if exists(parsed.RegistryValue) { .ext.registry_value = to_string(parsed.RegistryValue) ?? null }
           } else {
-              .udm.action = dv_type
+              .udm.event_type = dv_type
           }
       }
 

@@ -91,7 +91,7 @@ parser_vrl: |
       }
 
       # --- Action ---
-      if exists(parsed.action) { .udm.action = downcase(string!(parsed.action)) }
+      if exists(parsed.action) { .udm.event_type = downcase(string!(parsed.action)) }
 
       # --- Direction ---
       lea_ifdir = ""
@@ -271,9 +271,9 @@ parser_vrl: |
       # --- Action ---
       # Check both action and rule_action; rule_action is more specific
       if exists(parsed.rule_action) {
-          .udm.action = downcase(string!(parsed.rule_action))
+          .udm.event_type = downcase(string!(parsed.rule_action))
       } else if exists(parsed.action) {
-          .udm.action = downcase(string!(parsed.action))
+          .udm.event_type = downcase(string!(parsed.action))
       }
 
       # --- Direction ---
@@ -504,15 +504,15 @@ parser_vrl: |
   .udm.vendor_product = "Check Point Firewall"
 
   # Normalize action values
-  action_val = downcase(to_string!(.udm.action))
+  action_val = downcase(to_string!(.udm.event_type))
   if action_val == "accept" || action_val == "allow" {
-      .udm.action = "allow"
+      .udm.event_type = "allow"
   } else if action_val == "drop" || action_val == "block" || action_val == "reject" || action_val == "prevent" {
-      .udm.action = "deny"
+      .udm.event_type = "deny"
   } else if action_val == "encrypt" || action_val == "decrypt" {
-      .udm.action = action_val
+      .udm.event_type = action_val
   } else if action_val == "detect" || action_val == "monitor" || action_val == "ask" || action_val == "inform" {
-      .udm.action = action_val
+      .udm.event_type = action_val
   }
 
   # Normalize direction

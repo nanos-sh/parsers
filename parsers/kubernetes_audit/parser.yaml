@@ -56,7 +56,7 @@ parser_vrl: |
   # --- Verb → action ---
   if exists(parsed.verb) {
       verb = downcase(string!(parsed.verb))
-      .udm.action = verb
+      .udm.event_type = verb
   }
 
   # --- User identity ---

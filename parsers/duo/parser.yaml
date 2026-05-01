@@ -207,7 +207,7 @@ parser_vrl: |
           .udm.category = "admin"
 
           if exists(parsed.action) {
-              .udm.action = string!(parsed.action)
+              .udm.event_type = string!(parsed.action)
           }
 
           if exists(parsed.description) {

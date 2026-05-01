@@ -116,7 +116,7 @@ parser_vrl: |
       # Format: Built inbound|outbound TCP|UDP|ICMP connection <id> for <iface>:<ip>/<port> (<nat_ip>/<nat_port>) to <iface>:<ip>/<port> (<nat_ip>/<nat_port>)
       # ----------------------------------------------------------
       if msg_id == "302013" || msg_id == "302015" || msg_id == "302020" {
-          .udm.action = "allow"
+          .udm.event_type = "allow"
           .metadata.event_category = "network"
 
           conn_match, conn_err = parse_regex(msg_body, r'Built\s+(?P<direction>inbound|outbound)\s+(?P<protocol>\w+)\s+connection\s+(?P<conn_id>\d+)\s+for\s+(?P<src_iface>\w+):(?P<src_ip>[^/]+)/(?P<src_port>\d+)\s*(?:\((?P<src_nat_ip>[^/]+)/(?P<src_nat_port>\d+)\))?\s+to\s+(?P<dst_iface>\w+):(?P<dst_ip>[^/]+)/(?P<dst_port>\d+)\s*(?:\((?P<dst_nat_ip>[^/]+)/(?P<dst_nat_port>\d+)\))?')
@@ -155,7 +155,7 @@ parser_vrl: |
       # ----------------------------------------------------------
 
       } else if msg_id == "302014" || msg_id == "302016" || msg_id == "302021" {
-          .udm.action = "close"
+          .udm.event_type = "close"
           .metadata.event_category = "network"
 
           tear_match, tear_err = parse_regex(msg_body, r'Teardown\s+(?P<protocol>\w+)\s+connection\s+(?P<conn_id>\d+)\s+for\s+(?P<src_iface>\w+):(?P<src_ip>[^/]+)/(?P<src_port>\d+)\s+to\s+(?P<dst_iface>\w+):(?P<dst_ip>[^/]+)/(?P<dst_port>\d+)\s+duration\s+(?P<hours>\d+):(?P<minutes>\d{2}):(?P<seconds>\d{2})\s+bytes\s+(?P<bytes>\d+)(?:\s+reason\s+(?P<reason>.+))?')
@@ -189,7 +189,7 @@ parser_vrl: |
       # ----------------------------------------------------------
 
       } else if msg_id == "106023" {
-          .udm.action = "deny"
+          .udm.event_type = "deny"
           .metadata.event_category = "network"
 
           acl_match, acl_err = parse_regex(msg_body, r'Deny\s+(?P<protocol>\w+)\s+src\s+(?P<src_iface>\w+):(?P<src_ip>[^/]+)/(?P<src_port>\d+)\s+dst\s+(?P<dst_iface>\w+):(?P<dst_ip>[^/]+)/(?P<dst_port>\d+)\s+by\s+access-group\s+"(?P<acl_name>[^"]+)"')
@@ -214,7 +214,7 @@ parser_vrl: |
           acl100_match, acl100_err = parse_regex(msg_body, r'access-list\s+(?P<acl_name>\S+)\s+(?P<action>\w+)\s+(?P<protocol>\w+)\s+(?P<src_iface>\w+)/(?P<src_ip>[^(]+)\((?P<src_port>\d+)\)\s*->\s*(?P<dst_iface>\w+)/(?P<dst_ip>[^(]+)\((?P<dst_port>\d+)\)\s+hit-cnt\s+(?P<hit_cnt>\d+)')
           if acl100_err == null && acl100_match != null {
               action_str = downcase(string!(acl100_match.action))
-              .udm.action = action_str
+              .udm.event_type = action_str
               .udm.protocol = downcase(string!(acl100_match.protocol))
               .udm.rule_name = string!(acl100_match.acl_name)
               .udm.src_interface = string!(acl100_match.src_iface)
@@ -231,7 +231,7 @@ parser_vrl: |
       # ----------------------------------------------------------
 
       } else if msg_id == "106001" {
-          .udm.action = "deny"
+          .udm.event_type = "deny"
           .udm.direction = "inbound"
           .metadata.event_category = "network"
 
@@ -251,7 +251,7 @@ parser_vrl: |
       # ----------------------------------------------------------
 
       } else if msg_id == "106006" {
-          .udm.action = "deny"
+          .udm.event_type = "deny"
           .udm.direction = "inbound"
           .udm.protocol = "udp"
           .metadata.event_category = "network"
@@ -270,7 +270,7 @@ parser_vrl: |
       # ----------------------------------------------------------
 
       } else if msg_id == "106007" {
-          .udm.action = "deny"
+          .udm.event_type = "deny"
           .udm.direction = "inbound"
           .udm.protocol = "udp"
           .metadata.event_category = "network"
@@ -289,7 +289,7 @@ parser_vrl: |
       # ----------------------------------------------------------
 
       } else if msg_id == "106015" {
-          .udm.action = "deny"
+          .udm.event_type = "deny"
           .udm.protocol = "tcp"
           .metadata.event_category = "network"
 
@@ -312,10 +312,10 @@ parser_vrl: |
           .metadata.event_category = "network"
 
           if msg_id == "305011" {
-              .udm.action = "allow"
+              .udm.event_type = "allow"
               .ext.asa_message_desc = "Built dynamic NAT translation"
           } else {
-              .udm.action = "close"
+              .udm.event_type = "close"
               .ext.asa_message_desc = "Teardown dynamic NAT translation"
           }
 
@@ -346,10 +346,10 @@ parser_vrl: |
           .metadata.event_category = "network"
 
           if msg_id == "305009" {
-              .udm.action = "allow"
+              .udm.event_type = "allow"
               .ext.asa_message_desc = "Built static NAT translation"
           } else {
-              .udm.action = "close"
+              .udm.event_type = "close"
               .ext.asa_message_desc = "Teardown static NAT translation"
           }
 
@@ -372,7 +372,7 @@ parser_vrl: |
       # ----------------------------------------------------------
 
       } else if msg_id == "113004" {
-          .udm.action = "allow"
+          .udm.event_type = "allow"
           .metadata.event_category = "authentication"
           .udm.auth_result = "success"
 
@@ -388,7 +388,7 @@ parser_vrl: |
       # ----------------------------------------------------------
 
       } else if msg_id == "113005" {
-          .udm.action = "deny"
+          .udm.event_type = "deny"
           .metadata.event_category = "authentication"
           .udm.auth_result = "failure"
 
@@ -417,7 +417,7 @@ parser_vrl: |
               .udm.auth_result = "success"
               .ext.asa_message_desc = "AAA existing session found"
           } else {
-              .udm.action = "deny"
+              .udm.event_type = "deny"
               .udm.auth_result = "failure"
               .ext.asa_message_desc = "AAA authentication rejected (local)"
           }
@@ -438,9 +438,9 @@ parser_vrl: |
           if tcp_err == null && tcp_match != null {
               action_str = downcase(string!(tcp_match.action))
               if action_str == "permitted" {
-                  .udm.action = "allow"
+                  .udm.event_type = "allow"
               } else {
-                  .udm.action = "deny"
+                  .udm.event_type = "deny"
               }
               .udm.src_ip = string!(tcp_match.src_ip)
               .udm.src_port = to_int(tcp_match.src_port) ?? null
@@ -454,7 +454,7 @@ parser_vrl: |
       # ----------------------------------------------------------
 
       } else if msg_id == "710005" {
-          .udm.action = "deny"
+          .udm.event_type = "deny"
           .udm.protocol = "udp"
           .metadata.event_category = "network"
 
@@ -474,7 +474,7 @@ parser_vrl: |
 
       } else if msg_id == "713228" {
           .metadata.event_category = "vpn"
-          .udm.action = "allow"
+          .udm.event_type = "allow"
 
           vpn_match, vpn_err = parse_regex(msg_body, r'Group\s*=\s*(?P<group>[^,]+),\s*Username\s*=\s*(?P<user>[^,]+),\s*IP\s*=\s*(?P<remote_ip>[^,]+),\s*Assigned\s+private\s+IP\s+address\s+(?P<assigned_ip>\S+)\s+to\s+remote\s+user')
           if vpn_err == null && vpn_match != null {
@@ -504,7 +504,7 @@ parser_vrl: |
 
       } else if msg_id == "400027" {
           .metadata.event_category = "intrusion"
-          .udm.action = "alert"
+          .udm.event_type = "alert"
 
           ips_match, ips_err = parse_regex(msg_body, r'IDS:(?P<ids_sig>\d+)\s+(?P<sig_name>.*?)\s+from\s+(?P<src_ip>\S+)\s+to\s+(?P<dst_ip>\S+)\s+on\s+interface\s+(?P<iface>\w+)')
           if ips_err == null && ips_match != null {
@@ -521,7 +521,7 @@ parser_vrl: |
 
       } else if starts_with(msg_id, "400") {
           .metadata.event_category = "intrusion"
-          .udm.action = "alert"
+          .udm.event_type = "alert"
 
           ips_gen_match, ips_gen_err = parse_regex(msg_body, r'IDS:(?P<ids_sig>\d+)\s+(?P<sig_name>.*?)\s+from\s+(?P<src_ip>\S+)\s+to\s+(?P<dst_ip>\S+)')
           if ips_gen_err == null && ips_gen_match != null {
@@ -568,11 +568,11 @@ parser_vrl: |
           .udm.auth_type = "device"
 
           if msg_id == "611101" {
-              .udm.action = "allow"
+              .udm.event_type = "allow"
               .udm.auth_result = "success"
               .ext.asa_message_desc = "Device authentication succeeded"
           } else {
-              .udm.action = "deny"
+              .udm.event_type = "deny"
               .udm.auth_result = "failure"
               .ext.asa_message_desc = "Device authentication failed"
           }
@@ -589,10 +589,10 @@ parser_vrl: |
           .metadata.event_category = "authentication"
 
           if msg_id == "605004" {
-              .udm.action = "allow"
+              .udm.event_type = "allow"
               .ext.asa_message_desc = "Login permitted"
           } else {
-              .udm.action = "deny"
+              .udm.event_type = "deny"
               .ext.asa_message_desc = "Login denied"
           }
 
@@ -609,7 +609,7 @@ parser_vrl: |
 
       } else if msg_id == "305005" || msg_id == "305006" {
           .metadata.event_category = "network"
-          .udm.action = "deny"
+          .udm.event_type = "deny"
 
           no_xlate_match, no_xlate_err = parse_regex(msg_body, r'No\s+translation\s+group\s+found\s+for\s+(?P<protocol>\w+)\s+src\s+(?P<src_iface>\w+):(?P<src_ip>[^/]+)/(?P<src_port>\d+)\s+dst\s+(?P<dst_iface>\w+):(?P<dst_ip>[^/]+)/(?P<dst_port>\d+)')
           if no_xlate_err == null && no_xlate_match != null {
@@ -627,7 +627,7 @@ parser_vrl: |
       # ----------------------------------------------------------
 
       } else if msg_id == "313001" || msg_id == "313004" || msg_id == "313005" {
-          .udm.action = "deny"
+          .udm.event_type = "deny"
           .udm.protocol = "icmp"
           .metadata.event_category = "network"
 
@@ -644,7 +644,7 @@ parser_vrl: |
       # ----------------------------------------------------------
 
       } else if msg_id == "419001" || msg_id == "419002" {
-          .udm.action = "deny"
+          .udm.event_type = "deny"
           .udm.protocol = "tcp"
           .metadata.event_category = "network"
 
@@ -664,7 +664,7 @@ parser_vrl: |
 
       } else if msg_id == "733100" {
           .metadata.event_category = "threat"
-          .udm.action = "alert"
+          .udm.event_type = "alert"
 
           threat_match, threat_err = parse_regex(msg_body, r'(?P<threat_type>[\w\s]+)\s+from\s+(?P<src_ip>\S+)')
           if threat_err == null && threat_match != null {
@@ -715,11 +715,11 @@ parser_vrl: |
           # Try to infer action from message text
           lower_body = downcase(msg_body)
           if contains(lower_body, "denied") || contains(lower_body, "deny") {
-              .udm.action = "deny"
+              .udm.event_type = "deny"
           } else if contains(lower_body, "permitted") || contains(lower_body, "built") {
-              .udm.action = "allow"
+              .udm.event_type = "allow"
           } else if contains(lower_body, "teardown") {
-              .udm.action = "close"
+              .udm.event_type = "close"
           }
 
           # Categorize by message ID ranges

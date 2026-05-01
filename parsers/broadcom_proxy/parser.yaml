@@ -110,11 +110,11 @@ parser_vrl: |
 
               s_action_upper = upcase(s_action)
               if contains(s_action_upper, "DENIED") {
-                  .udm.action = "deny"
+                  .udm.event_type = "deny"
               } else if contains(s_action_upper, "HIT") || contains(s_action_upper, "MISS") || contains(s_action_upper, "REFRESH") || contains(s_action_upper, "TUNNEL") {
-                  .udm.action = "allow"
+                  .udm.event_type = "allow"
               } else {
-                  .udm.action = downcase(s_action)
+                  .udm.event_type = downcase(s_action)
               }
           }
 

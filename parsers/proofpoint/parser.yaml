@@ -114,7 +114,7 @@ parser_vrl: |
 
           # Filter disposition / action
           if exists(parsed.filter.disposition) {
-              .udm.action = string!(parsed.filter.disposition)
+              .udm.event_type = string!(parsed.filter.disposition)
           }
           if exists(parsed.filter.routeDirection) {
               .ext.direction = string!(parsed.filter.routeDirection)
@@ -127,7 +127,7 @@ parser_vrl: |
                   .ext.spam_verdict = string!(spam.verdict)
               }
               if exists(spam.disposition) {
-                  .udm.action = string!(spam.disposition)
+                  .udm.event_type = string!(spam.disposition)
               }
               if exists(spam.scores.overall) {
                   .ext.risk_score = to_string(spam.scores.overall) ?? ""
@@ -211,7 +211,7 @@ parser_vrl: |
           if exists(parsed.userAgent) {
               .udm.http_user_agent = string!(parsed.userAgent)
           }
-          .udm.action = "click"
+          .udm.event_type = "click"
 
       } else if event_type == "tap_message" {
           # ============= TAP MESSAGE EVENT =============
@@ -283,7 +283,7 @@ parser_vrl: |
           # Quarantine
           if exists(parsed.quarantineFolder) {
               .ext.quarantine_folder = string!(parsed.quarantineFolder)
-              .udm.action = "quarantine"
+              .udm.event_type = "quarantine"
           }
           if exists(parsed.quarantineRule) {
               .ext.quarantine_rule = string!(parsed.quarantineRule)

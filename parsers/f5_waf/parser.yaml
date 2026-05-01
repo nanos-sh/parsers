@@ -58,7 +58,7 @@ parser_vrl: |
       attack_type = string!(parsed.attack_type)
       .udm.signature = attack_type
       .udm.description = attack_type
-      .udm.action = if contains(downcase(attack_type), "sql") {
+      .udm.event_type = if contains(downcase(attack_type), "sql") {
           "sql_injection_attempt"
       } else if contains(downcase(attack_type), "xss") || contains(downcase(attack_type), "cross site") {
           "xss_attempt"
@@ -89,8 +89,8 @@ parser_vrl: |
   if exists(parsed.action) {
       waf_action = string!(parsed.action)
       .ext.waf_action = waf_action
-      if !exists(.udm.action) || .udm.action == "waf_violation" {
-           if contains(downcase(waf_action), "block") { .udm.action = "blocked" } else if contains(downcase(waf_action), "allow") { .udm.action = "allowed" } else if contains(downcase(waf_action), "alert") { .udm.action = "alerted" }
+      if !exists(.udm.event_type) || .udm.event_type == "waf_violation" {
+           if contains(downcase(waf_action), "block") { .udm.event_type = "blocked" } else if contains(downcase(waf_action), "allow") { .udm.event_type = "allowed" } else if contains(downcase(waf_action), "alert") { .udm.event_type = "alerted" }
       }
   }
 

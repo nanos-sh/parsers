@@ -272,7 +272,7 @@ parser_vrl: |
 
       # === 4624 - Successful Logon ===
       if event_id == 4624 {
-          .udm.action = "logon_success"
+          .udm.event_type = "logon_success"
           .udm.category = "authentication"
           .udm.auth_result = "success"
 
@@ -325,7 +325,7 @@ parser_vrl: |
 
       # === 4625 - Failed Logon ===
       if event_id == 4625 {
-          .udm.action = "logon_failure"
+          .udm.event_type = "logon_failure"
           .udm.category = "authentication"
           .udm.auth_result = "failure"
 
@@ -370,7 +370,7 @@ parser_vrl: |
 
       # === 4634/4647 - Logoff ===
       if event_id == 4634 || event_id == 4647 {
-          .udm.action = "logoff"
+          .udm.event_type = "logoff"
           .udm.category = "authentication"
           .udm.user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.user_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -381,7 +381,7 @@ parser_vrl: |
 
       # === 4648 - Explicit Credentials ===
       if event_id == 4648 {
-          .udm.action = "explicit_credentials"
+          .udm.event_type = "explicit_credentials"
           .udm.category = "authentication"
           .udm.src_user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.src_nt_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -412,7 +412,7 @@ parser_vrl: |
 
       # === 4672 - Special Privileges Assigned ===
       if event_id == 4672 {
-          .udm.action = "special_privileges_assigned"
+          .udm.event_type = "special_privileges_assigned"
           .udm.category = "authorization"
           .udm.user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.user_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -431,7 +431,7 @@ parser_vrl: |
 
       # === 4688 - Process Creation ===
       if event_id == 4688 {
-          .udm.action = "process_create"
+          .udm.event_type = "process_create"
           .udm.category = "process"
 
           new_process = string(get!(body_fields, ["Process Information.New Process Name"])) ?? ""
@@ -484,7 +484,7 @@ parser_vrl: |
 
       # === 4689 - Process Termination ===
       if event_id == 4689 {
-          .udm.action = "process_terminate"
+          .udm.event_type = "process_terminate"
           .udm.category = "process"
           proc_name = string(get!(body_fields, ["Process Information.Process Name"])) ?? ""
           if proc_name != "" {
@@ -507,7 +507,7 @@ parser_vrl: |
 
       # === 4697 - Service Installed (Security log) ===
       if event_id == 4697 {
-          .udm.action = "service_installed"
+          .udm.event_type = "service_installed"
           .udm.category = "service"
           .udm.user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.user_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -522,7 +522,7 @@ parser_vrl: |
 
       # === 7045 - Service Installed (System log) ===
       if event_id == 7045 {
-          .udm.action = "service_installed"
+          .udm.event_type = "service_installed"
           .udm.category = "service"
           # 7045 has non-indented fields in the message body
           .udm.service_name = string(get!(body_fields, ["General.Service Name"])) ?? null
@@ -534,7 +534,7 @@ parser_vrl: |
 
       # === 4720 - User Account Created ===
       if event_id == 4720 {
-          .udm.action = "account_created"
+          .udm.event_type = "account_created"
           .udm.category = "account_management"
           .udm.src_user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.src_nt_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -549,7 +549,7 @@ parser_vrl: |
 
       # === 4722 - User Account Enabled ===
       if event_id == 4722 {
-          .udm.action = "account_enabled"
+          .udm.event_type = "account_enabled"
           .udm.category = "account_management"
           .udm.src_user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.src_nt_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -560,7 +560,7 @@ parser_vrl: |
 
       # === 4723 - Password Change Attempt ===
       if event_id == 4723 {
-          .udm.action = "password_change_attempt"
+          .udm.event_type = "password_change_attempt"
           .udm.category = "account_management"
           .udm.src_user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.src_nt_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -571,7 +571,7 @@ parser_vrl: |
 
       # === 4724 - Password Reset ===
       if event_id == 4724 {
-          .udm.action = "password_reset"
+          .udm.event_type = "password_reset"
           .udm.category = "account_management"
           .udm.src_user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.src_nt_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -582,7 +582,7 @@ parser_vrl: |
 
       # === 4725 - User Account Disabled ===
       if event_id == 4725 {
-          .udm.action = "account_disabled"
+          .udm.event_type = "account_disabled"
           .udm.category = "account_management"
           .udm.src_user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.src_nt_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -593,7 +593,7 @@ parser_vrl: |
 
       # === 4726 - User Account Deleted ===
       if event_id == 4726 {
-          .udm.action = "account_deleted"
+          .udm.event_type = "account_deleted"
           .udm.category = "account_management"
           .udm.src_user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.src_nt_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -604,7 +604,7 @@ parser_vrl: |
 
       # === 4728/4732/4756 - Group Membership Added ===
       if event_id == 4728 || event_id == 4732 || event_id == 4756 {
-          .udm.action = if event_id == 4728 { "member_added_global_group" } else if event_id == 4732 { "member_added_local_group" } else { "member_added_universal_group" }
+          .udm.event_type = if event_id == 4728 { "member_added_global_group" } else if event_id == 4732 { "member_added_local_group" } else { "member_added_universal_group" }
           .udm.category = "account_management"
           .udm.src_user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.src_nt_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -618,7 +618,7 @@ parser_vrl: |
 
       # === 4729/4733/4757 - Group Membership Removed ===
       if event_id == 4729 || event_id == 4733 || event_id == 4757 {
-          .udm.action = if event_id == 4729 { "member_removed_global_group" } else if event_id == 4733 { "member_removed_local_group" } else { "member_removed_universal_group" }
+          .udm.event_type = if event_id == 4729 { "member_removed_global_group" } else if event_id == 4733 { "member_removed_local_group" } else { "member_removed_universal_group" }
           .udm.category = "account_management"
           .udm.src_user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.src_nt_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -631,7 +631,7 @@ parser_vrl: |
 
       # === 4768 - Kerberos TGT Request (AS-REQ) ===
       if event_id == 4768 {
-          .udm.action = "kerberos_tgt_request"
+          .udm.event_type = "kerberos_tgt_request"
           .udm.category = "authentication"
           .udm.auth_type = "Kerberos"
           .udm.user = string(get!(body_fields, ["Account Information.Account Name"])) ?? null
@@ -669,7 +669,7 @@ parser_vrl: |
 
       # === 4769 - Kerberos Service Ticket (TGS-REQ) ===
       if event_id == 4769 {
-          .udm.action = "kerberos_service_ticket"
+          .udm.event_type = "kerberos_service_ticket"
           .udm.category = "authentication"
           .udm.auth_type = "Kerberos"
           .udm.user = string(get!(body_fields, ["Account Information.Account Name"])) ?? null
@@ -704,7 +704,7 @@ parser_vrl: |
 
       # === 4771 - Kerberos Pre-Auth Failed ===
       if event_id == 4771 {
-          .udm.action = "kerberos_preauth_failed"
+          .udm.event_type = "kerberos_preauth_failed"
           .udm.category = "authentication"
           .udm.auth_type = "Kerberos"
           .udm.auth_result = "failure"
@@ -738,7 +738,7 @@ parser_vrl: |
 
       # === 4776 - NTLM Authentication ===
       if event_id == 4776 {
-          .udm.action = "ntlm_authentication"
+          .udm.event_type = "ntlm_authentication"
           .udm.category = "authentication"
           .udm.auth_type = "NTLM"
           .udm.user = string(get!(body_fields, ["General.Logon Account"])) ?? null
@@ -752,7 +752,7 @@ parser_vrl: |
 
       # === 5140 - Network Share Accessed ===
       if event_id == 5140 {
-          .udm.action = "share_access"
+          .udm.event_type = "share_access"
           .udm.category = "file_access"
           .udm.user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.user_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -774,7 +774,7 @@ parser_vrl: |
 
       # === 5145 - Network Share Object Checked ===
       if event_id == 5145 {
-          .udm.action = "share_object_access"
+          .udm.event_type = "share_object_access"
           .udm.category = "file_access"
           .udm.user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.user_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -803,7 +803,7 @@ parser_vrl: |
 
       # === 1102 - Audit Log Cleared ===
       if event_id == 1102 {
-          .udm.action = "audit_log_cleared"
+          .udm.event_type = "audit_log_cleared"
           .udm.category = "audit"
           .udm.severity = "high"
           .udm.user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
@@ -814,7 +814,7 @@ parser_vrl: |
 
       # === 4740 - Account Locked Out ===
       if event_id == 4740 {
-          .udm.action = "account_locked"
+          .udm.event_type = "account_locked"
           .udm.category = "account_management"
           .udm.dest_user = string(get!(body_fields, ["Target Account.Account Name"])) ?? string(get!(body_fields, ["Account That Was Locked Out.Account Name"])) ?? null
           .udm.user_domain = string(get!(body_fields, ["Target Account.Account Domain"])) ?? null
@@ -825,7 +825,7 @@ parser_vrl: |
 
       # === 4767 - Account Unlocked ===
       if event_id == 4767 {
-          .udm.action = "account_unlocked"
+          .udm.event_type = "account_unlocked"
           .udm.category = "account_management"
           .udm.dest_user = string(get!(body_fields, ["Target Account.Account Name"])) ?? null
           .udm.user_domain = string(get!(body_fields, ["Target Account.Account Domain"])) ?? null
@@ -836,7 +836,7 @@ parser_vrl: |
 
       # === 4663 - Object Access Attempt ===
       if event_id == 4663 {
-          .udm.action = "object_access"
+          .udm.event_type = "object_access"
           .udm.category = "file_access"
           .udm.user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.user_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -858,7 +858,7 @@ parser_vrl: |
 
       # === 4657 - Registry Value Modified ===
       if event_id == 4657 {
-          .udm.action = "registry_value_modified"
+          .udm.event_type = "registry_value_modified"
           .udm.category = "registry"
           .udm.user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.user_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -883,7 +883,7 @@ parser_vrl: |
 
       # === 4698/4699/4700/4701/4702 - Scheduled Task Events ===
       if event_id == 4698 || event_id == 4699 || event_id == 4700 || event_id == 4701 || event_id == 4702 {
-          .udm.action = if event_id == 4698 { "scheduled_task_created" } else if event_id == 4699 { "scheduled_task_deleted" } else if event_id == 4700 { "scheduled_task_enabled" } else if event_id == 4701 { "scheduled_task_disabled" } else { "scheduled_task_updated" }
+          .udm.event_type = if event_id == 4698 { "scheduled_task_created" } else if event_id == 4699 { "scheduled_task_deleted" } else if event_id == 4700 { "scheduled_task_enabled" } else if event_id == 4701 { "scheduled_task_disabled" } else { "scheduled_task_updated" }
           .udm.category = "scheduled_task"
           .udm.user = string(get!(body_fields, ["Subject.Account Name"])) ?? null
           .udm.user_domain = string(get!(body_fields, ["Subject.Account Domain"])) ?? null
@@ -894,7 +894,7 @@ parser_vrl: |
 
       # === 4946/4947/4948/4950 - Windows Firewall Rule Changes ===
       if event_id == 4946 || event_id == 4947 || event_id == 4948 || event_id == 4950 {
-          .udm.action = if event_id == 4946 { "firewall_rule_added" } else if event_id == 4947 { "firewall_rule_modified" } else if event_id == 4948 { "firewall_rule_deleted" } else { "firewall_settings_changed" }
+          .udm.event_type = if event_id == 4946 { "firewall_rule_added" } else if event_id == 4947 { "firewall_rule_modified" } else if event_id == 4948 { "firewall_rule_deleted" } else { "firewall_settings_changed" }
           .udm.category = "firewall"
           .udm.rule_name = string(get!(body_fields, ["Rule Information.Rule Name"])) ?? string(get!(body_fields, ["General.Rule Name"])) ?? null
           .ext.rule_id = string(get!(body_fields, ["Rule Information.Rule ID"])) ?? string(get!(body_fields, ["General.Rule ID"])) ?? null
@@ -904,8 +904,8 @@ parser_vrl: |
       # ============================================================
       # Fallback action for unhandled EventCodes
       # ============================================================
-      if !exists(.udm.action) || .udm.action == null {
-          .udm.action = "windows_event_" + to_string(event_id)
+      if !exists(.udm.event_type) || .udm.event_type == null {
+          .udm.event_type = "windows_event_" + to_string(event_id)
       }
 
       # ============================================================

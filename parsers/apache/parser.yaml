@@ -40,7 +40,7 @@ parser_vrl: |
       }
 
       # Standard mappings
-      .udm.action = parsed.method
+      .udm.event_type = parsed.method
 
       # Timestamp handling
       # Apache parser returns a timestamp object, we need to format it to ISO string

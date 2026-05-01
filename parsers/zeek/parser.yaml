@@ -83,7 +83,7 @@ parser_vrl: |
       # ---------------------------------------------------------------
       if log_type == "conn" {
           # --- conn.log ---
-          .udm.action = "connection"
+          .udm.event_type = "connection"
           .udm.category = "network"
 
           if exists(parsed.duration) {
@@ -131,7 +131,7 @@ parser_vrl: |
 
       } else if log_type == "dns" {
           # --- dns.log ---
-          .udm.action = "dns_query"
+          .udm.event_type = "dns_query"
           .udm.category = "network"
 
           if exists(parsed.query) {
@@ -204,7 +204,7 @@ parser_vrl: |
 
       } else if log_type == "http" {
           # --- http.log ---
-          .udm.action = "http_request"
+          .udm.event_type = "http_request"
           .udm.category = "web"
 
           if exists(parsed.method) {
@@ -301,7 +301,7 @@ parser_vrl: |
 
       } else if log_type == "ssl" {
           # --- ssl.log ---
-          .udm.action = "ssl_connection"
+          .udm.event_type = "ssl_connection"
           .udm.category = "network"
 
           if exists(parsed.server_name) {
@@ -358,7 +358,7 @@ parser_vrl: |
 
       } else if log_type == "files" {
           # --- files.log ---
-          .udm.action = "file_transfer"
+          .udm.event_type = "file_transfer"
           .udm.category = "file"
 
           if exists(parsed.filename) {
@@ -450,7 +450,7 @@ parser_vrl: |
 
       } else if log_type == "notice" {
           # --- notice.log ---
-          .udm.action = "alert"
+          .udm.event_type = "alert"
           .udm.category = "security"
 
           if exists(parsed.note) {
@@ -535,7 +535,7 @@ parser_vrl: |
 
       } else if log_type == "smtp" {
           # --- smtp.log ---
-          .udm.action = "email"
+          .udm.event_type = "email"
           .udm.category = "email"
 
           if exists(parsed.mailfrom) {
@@ -621,7 +621,7 @@ parser_vrl: |
 
       } else if log_type == "ssh" {
           # --- ssh.log ---
-          .udm.action = "ssh_session"
+          .udm.event_type = "ssh_session"
           .udm.category = "authentication"
 
           if exists(parsed.auth_success) {
@@ -669,7 +669,7 @@ parser_vrl: |
 
       } else if log_type == "rdp" {
           # --- rdp.log ---
-          .udm.action = "rdp_session"
+          .udm.event_type = "rdp_session"
           .udm.category = "authentication"
 
           if exists(parsed.cookie) {
@@ -726,7 +726,7 @@ parser_vrl: |
 
       } else if log_type == "intel" {
           # --- intel.log ---
-          .udm.action = "intel_match"
+          .udm.event_type = "intel_match"
           .udm.category = "security"
           .udm.severity = "high"
 
@@ -760,7 +760,7 @@ parser_vrl: |
 
       } else if log_type == "weird" {
           # --- weird.log ---
-          .udm.action = "weird_activity"
+          .udm.event_type = "weird_activity"
           .udm.category = "network"
           .udm.severity = "low"
 
@@ -782,7 +782,7 @@ parser_vrl: |
 
       } else if log_type == "x509" {
           # --- x509.log ---
-          .udm.action = "certificate"
+          .udm.event_type = "certificate"
           .udm.category = "network"
 
           if exists(parsed.id) {
@@ -842,7 +842,7 @@ parser_vrl: |
 
       } else if log_type == "pe" {
           # --- pe.log ---
-          .udm.action = "pe_analysis"
+          .udm.event_type = "pe_analysis"
           .udm.category = "file"
 
           if exists(parsed.id) {
@@ -896,7 +896,7 @@ parser_vrl: |
 
       } else if log_type == "dpd" {
           # --- dpd.log (dynamic protocol detection) ---
-          .udm.action = "protocol_detection"
+          .udm.event_type = "protocol_detection"
           .udm.category = "network"
 
           if exists(parsed.service) {
@@ -908,7 +908,7 @@ parser_vrl: |
 
       } else if log_type == "tunnel" {
           # --- tunnel.log ---
-          .udm.action = "tunnel"
+          .udm.event_type = "tunnel"
           .udm.category = "network"
 
           if exists(parsed.tunnel_type) {
@@ -920,7 +920,7 @@ parser_vrl: |
 
       } else if log_type == "sip" {
           # --- sip.log ---
-          .udm.action = "sip_session"
+          .udm.event_type = "sip_session"
           .udm.category = "network"
 
           if exists(parsed.method) {
@@ -965,7 +965,7 @@ parser_vrl: |
 
       } else if log_type == "snmp" {
           # --- snmp.log ---
-          .udm.action = "snmp_query"
+          .udm.event_type = "snmp_query"
           .udm.category = "network"
 
           if exists(parsed.duration) {
@@ -998,7 +998,7 @@ parser_vrl: |
 
       } else if log_type == "ftp" {
           # --- ftp.log ---
-          .udm.action = "ftp_session"
+          .udm.event_type = "ftp_session"
           .udm.category = "network"
 
           if exists(parsed.user) {
@@ -1031,7 +1031,7 @@ parser_vrl: |
 
       } else if log_type == "kerberos" {
           # --- kerberos.log ---
-          .udm.action = "kerberos_auth"
+          .udm.event_type = "kerberos_auth"
           .udm.category = "authentication"
 
           if exists(parsed.client) {
@@ -1072,7 +1072,7 @@ parser_vrl: |
 
       } else if log_type == "ntlm" {
           # --- ntlm.log ---
-          .udm.action = "ntlm_auth"
+          .udm.event_type = "ntlm_auth"
           .udm.category = "authentication"
 
           if exists(parsed.username) {
@@ -1104,7 +1104,7 @@ parser_vrl: |
 
       } else if log_type == "smb_files" {
           # --- smb_files.log ---
-          .udm.action = "smb_file_access"
+          .udm.event_type = "smb_file_access"
           .udm.category = "file"
 
           if exists(parsed.action) {
@@ -1125,7 +1125,7 @@ parser_vrl: |
 
       } else if log_type == "smb_mapping" {
           # --- smb_mapping.log ---
-          .udm.action = "smb_mapping"
+          .udm.event_type = "smb_mapping"
           .udm.category = "network"
 
           if exists(parsed.path) {
@@ -1143,7 +1143,7 @@ parser_vrl: |
 
       } else if log_type == "dce_rpc" {
           # --- dce_rpc.log ---
-          .udm.action = "dce_rpc_call"
+          .udm.event_type = "dce_rpc_call"
           .udm.category = "network"
 
           if exists(parsed.rtt) {
@@ -1161,7 +1161,7 @@ parser_vrl: |
 
       } else {
           # Unknown log type — store what we can
-          .udm.action = log_type
+          .udm.event_type = log_type
           .udm.category = "network"
       }
 

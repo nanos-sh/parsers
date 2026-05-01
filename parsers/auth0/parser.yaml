@@ -84,7 +84,7 @@ parser_vrl: |
           type_code
       }
 
-      .udm.action = action_name
+      .udm.event_type = action_name
       .ext.type_code = type_code
 
       # Determine success/failure from type code prefix

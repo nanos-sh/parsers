@@ -45,7 +45,7 @@ parser_vrl: |
           squid_result = to_string(result_parts[0])
           http_status = to_int(result_parts[1]) ?? 0
 
-          .udm.action = if contains(squid_result, "HIT") {
+          .udm.event_type = if contains(squid_result, "HIT") {
               "cache_hit"
           } else if contains(squid_result, "MISS") {
               "cache_miss"
@@ -70,8 +70,8 @@ parser_vrl: |
       http_method = to_string(parts[5])
       .udm.http_method = http_method
 
-      if http_method == "CONNECT" && .udm.action != "denied" {
-          .udm.action = "tunnel_connect"
+      if http_method == "CONNECT" && .udm.event_type != "denied" {
+          .udm.event_type = "tunnel_connect"
       }
 
       # Field 6: Request URL

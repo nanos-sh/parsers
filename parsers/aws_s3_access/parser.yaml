@@ -54,7 +54,7 @@ parser_vrl: |
       # --- Operation (Action) ---
       operation = string!(matched.operation)
       if operation != "-" {
-          .udm.action = operation
+          .udm.event_type = operation
       }
 
       # --- Key (File Path) ---

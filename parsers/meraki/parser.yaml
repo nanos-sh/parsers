@@ -79,9 +79,9 @@ parser_vrl: |
           .ext.pattern = pattern_val
           # Derive action from pattern
           if contains(pattern_val, "allow") {
-              .udm.action = "allow"
+              .udm.event_type = "allow"
           } else if contains(pattern_val, "deny") {
-              .udm.action = "deny"
+              .udm.event_type = "deny"
           }
       }
 
@@ -144,7 +144,7 @@ parser_vrl: |
           }
       }
 
-      .udm.action = "alert"
+      .udm.event_type = "alert"
   }
 
   # ============================================================
@@ -211,11 +211,11 @@ parser_vrl: |
               if exists(parsed.peer_contact) { .ext.peer_contact = string!(parsed.peer_contact) }
               if exists(parsed.connectivity) {
                   conn = string!(parsed.connectivity)
-                  if conn == "true" { .udm.action = "connected" } else { .udm.action = "disconnected" }
+                  if conn == "true" { .udm.event_type = "connected" } else { .udm.event_type = "disconnected" }
               }
           } else if event_type == "association" {
               .metadata.event_category = "wireless"
-              .udm.action = "association"
+              .udm.event_type = "association"
               if exists(parsed.radio) { .ext.radio = string!(parsed.radio) }
               if exists(parsed.vap) { .ext.vap = string!(parsed.vap) }
               if exists(parsed.channel) { .ext.channel = string!(parsed.channel) }
@@ -239,7 +239,7 @@ parser_vrl: |
           .metadata.event_category = "switch"
           .ext.switch_port = to_int(port_match.port) ?? null
           .udm.status = string!(port_match.status)
-          .udm.action = string!(port_match.status)
+          .udm.event_type = string!(port_match.status)
       }
   }
 

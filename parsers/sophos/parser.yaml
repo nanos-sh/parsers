@@ -133,16 +133,16 @@ parser_vrl: |
       .udm.status = status_val
       status_lower = downcase(status_val)
       if status_lower == "allow" || status_lower == "allowed" || status_lower == "successful" || status_lower == "accept" {
-          .udm.action = "allowed"
+          .udm.event_type = "allowed"
       } else if status_lower == "deny" || status_lower == "denied" || status_lower == "drop" || status_lower == "dropped" || status_lower == "failed" || status_lower == "block" || status_lower == "blocked" {
-          .udm.action = "blocked"
+          .udm.event_type = "blocked"
       } else if status_lower == "alert" {
-          .udm.action = "alert"
+          .udm.event_type = "alert"
       } else {
           # For HTTP status codes (Content Filtering), don't override action
           status_int = to_int(status_val) ?? null
           if status_int == null {
-              .udm.action = status_lower
+              .udm.event_type = status_lower
           }
       }
   }
@@ -150,9 +150,9 @@ parser_vrl: |
   # Override action from log_subtype if more specific
   subtype_lower = downcase(log_subtype)
   if subtype_lower == "allowed" || subtype_lower == "allow" {
-      .udm.action = "allowed"
+      .udm.event_type = "allowed"
   } else if subtype_lower == "denied" || subtype_lower == "deny" || subtype_lower == "drop" || subtype_lower == "dropped" {
-      .udm.action = "blocked"
+      .udm.event_type = "blocked"
   }
 
   # ============================================================

@@ -93,7 +93,7 @@ parser_vrl: |
       # ALERT
       # ===============================================================
       if event_type == "alert" {
-          .udm.action = "alert"
+          .udm.event_type = "alert"
 
           if exists(parsed.alert) {
               a = parsed.alert
@@ -108,7 +108,7 @@ parser_vrl: |
                   .udm.category = string!(a.category)
               }
               if exists(a.action) {
-                  .udm.action = downcase(string!(a.action))
+                  .udm.event_type = downcase(string!(a.action))
               }
               if exists(a.gid) {
                   .ext.alert_gid = to_int(a.gid) ?? null
@@ -200,7 +200,7 @@ parser_vrl: |
       # FLOW
       # ===============================================================
       } else if event_type == "flow" {
-          .udm.action = "connection"
+          .udm.event_type = "connection"
 
           if exists(parsed.flow) {
               fl = parsed.flow
@@ -272,7 +272,7 @@ parser_vrl: |
       # DNS
       # ===============================================================
       } else if event_type == "dns" {
-          .udm.action = "dns_query"
+          .udm.event_type = "dns_query"
 
           if exists(parsed.dns) {
               d = parsed.dns
@@ -336,7 +336,7 @@ parser_vrl: |
       # HTTP
       # ===============================================================
       } else if event_type == "http" {
-          .udm.action = "http_request"
+          .udm.event_type = "http_request"
 
           if exists(parsed.http) {
               h = parsed.http
@@ -392,7 +392,7 @@ parser_vrl: |
       # TLS
       # ===============================================================
       } else if event_type == "tls" {
-          .udm.action = "tls_handshake"
+          .udm.event_type = "tls_handshake"
 
           if exists(parsed.tls) {
               t = parsed.tls
@@ -445,7 +445,7 @@ parser_vrl: |
       # FILEINFO
       # ===============================================================
       } else if event_type == "fileinfo" {
-          .udm.action = "file_transfer"
+          .udm.event_type = "file_transfer"
 
           if exists(parsed.fileinfo) {
               fi = parsed.fileinfo
@@ -502,7 +502,7 @@ parser_vrl: |
       # SMTP / EMAIL
       # ===============================================================
       } else if event_type == "smtp" {
-          .udm.action = "email_sent"
+          .udm.event_type = "email_sent"
 
           if exists(parsed.smtp) {
               s = parsed.smtp
@@ -545,7 +545,7 @@ parser_vrl: |
       # SSH
       # ===============================================================
       } else if event_type == "ssh" {
-          .udm.action = "ssh_connection"
+          .udm.event_type = "ssh_connection"
 
           if exists(parsed.ssh) {
               ssh = parsed.ssh
@@ -585,7 +585,7 @@ parser_vrl: |
       # ANOMALY
       # ===============================================================
       } else if event_type == "anomaly" {
-          .udm.action = "anomaly"
+          .udm.event_type = "anomaly"
 
           if exists(parsed.anomaly) {
               an = parsed.anomaly
@@ -607,7 +607,7 @@ parser_vrl: |
       # STATS
       # ===============================================================
       } else if event_type == "stats" {
-          .udm.action = "stats"
+          .udm.event_type = "stats"
 
           if exists(parsed.stats) {
               st = parsed.stats
@@ -649,7 +649,7 @@ parser_vrl: |
       # DROP
       # ===============================================================
       } else if event_type == "drop" {
-          .udm.action = "drop"
+          .udm.event_type = "drop"
 
           if exists(parsed.drop) {
               dr = parsed.drop
@@ -665,7 +665,7 @@ parser_vrl: |
       # NETFLOW
       # ===============================================================
       } else if event_type == "netflow" {
-          .udm.action = "netflow"
+          .udm.event_type = "netflow"
 
           if exists(parsed.netflow) {
               nf = parsed.netflow
@@ -690,7 +690,7 @@ parser_vrl: |
       # RDP
       # ===============================================================
       } else if event_type == "rdp" {
-          .udm.action = "rdp_connection"
+          .udm.event_type = "rdp_connection"
 
           if exists(parsed.rdp) {
               r = parsed.rdp
@@ -709,7 +709,7 @@ parser_vrl: |
       # DHCP
       # ===============================================================
       } else if event_type == "dhcp" {
-          .udm.action = "dhcp"
+          .udm.event_type = "dhcp"
 
           if exists(parsed.dhcp) {
               dh = parsed.dhcp
@@ -734,7 +734,7 @@ parser_vrl: |
       # SMB
       # ===============================================================
       } else if event_type == "smb" {
-          .udm.action = "smb"
+          .udm.event_type = "smb"
 
           if exists(parsed.smb) {
               smb = parsed.smb
@@ -756,7 +756,7 @@ parser_vrl: |
       # KRB5 (Kerberos)
       # ===============================================================
       } else if event_type == "krb5" {
-          .udm.action = "kerberos"
+          .udm.event_type = "kerberos"
 
           if exists(parsed.krb5) {
               k = parsed.krb5
@@ -781,7 +781,7 @@ parser_vrl: |
       # SNMP
       # ===============================================================
       } else if event_type == "snmp" {
-          .udm.action = "snmp"
+          .udm.event_type = "snmp"
 
           if exists(parsed.snmp) {
               sn = parsed.snmp
@@ -800,7 +800,7 @@ parser_vrl: |
       # SIP
       # ===============================================================
       } else if event_type == "sip" {
-          .udm.action = "sip"
+          .udm.event_type = "sip"
 
           if exists(parsed.sip) {
               si = parsed.sip
@@ -825,7 +825,7 @@ parser_vrl: |
       # NFS
       # ===============================================================
       } else if event_type == "nfs" {
-          .udm.action = "nfs"
+          .udm.event_type = "nfs"
 
           if exists(parsed.nfs) {
               nfs = parsed.nfs
@@ -850,7 +850,7 @@ parser_vrl: |
       # DCERPC
       # ===============================================================
       } else if event_type == "dcerpc" {
-          .udm.action = "dcerpc"
+          .udm.event_type = "dcerpc"
 
           if exists(parsed.dcerpc) {
               dc = parsed.dcerpc
@@ -872,7 +872,7 @@ parser_vrl: |
       # TFTP
       # ===============================================================
       } else if event_type == "tftp" {
-          .udm.action = "tftp"
+          .udm.event_type = "tftp"
 
           if exists(parsed.tftp) {
               tf = parsed.tftp
@@ -888,7 +888,7 @@ parser_vrl: |
       # IKEv2
       # ===============================================================
       } else if event_type == "ikev2" {
-          .udm.action = "ikev2"
+          .udm.event_type = "ikev2"
 
           if exists(parsed.ikev2) {
               ik = parsed.ikev2
@@ -913,7 +913,7 @@ parser_vrl: |
       # MQTT
       # ===============================================================
       } else if event_type == "mqtt" {
-          .udm.action = "mqtt"
+          .udm.event_type = "mqtt"
 
           if exists(parsed.mqtt) {
               mq = parsed.mqtt
@@ -932,7 +932,7 @@ parser_vrl: |
       # QUIC
       # ===============================================================
       } else if event_type == "quic" {
-          .udm.action = "quic"
+          .udm.event_type = "quic"
 
           if exists(parsed.quic) {
               q = parsed.quic
@@ -952,9 +952,9 @@ parser_vrl: |
       # ===============================================================
       } else {
           if event_type != "" {
-              .udm.action = event_type
+              .udm.event_type = event_type
           } else {
-              .udm.action = "unknown"
+              .udm.event_type = "unknown"
           }
       }
 
@@ -969,7 +969,7 @@ parser_vrl: |
   } else {
       # JSON parse failed — store raw message
       .ext.parse_error = to_string!(err)
-      .udm.action = "parse_error"
+      .udm.event_type = "parse_error"
       .udm.dvc = "suricata"
       .udm.vendor = "OISF"
       .udm.product = "Suricata"

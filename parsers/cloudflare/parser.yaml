@@ -131,7 +131,7 @@ parser_vrl: |
 
           # Action
           if exists(parsed.Action) {
-              .udm.action = downcase(string!(parsed.Action))
+              .udm.event_type = downcase(string!(parsed.Action))
           }
 
           # Request details
@@ -281,7 +281,7 @@ parser_vrl: |
           if exists(parsed.WAFAction) {
               waf_action = downcase(string!(parsed.WAFAction))
               if waf_action != "unknown" && waf_action != "" {
-                  .udm.action = waf_action
+                  .udm.event_type = waf_action
               }
           }
           if exists(parsed.WAFRuleMessage) {
@@ -307,7 +307,7 @@ parser_vrl: |
               if length(fw_actions) > 0 {
                   first_fw_action = to_string(fw_actions[0]) ?? ""
                   if first_fw_action != "" {
-                      .udm.action = downcase(first_fw_action)
+                      .udm.event_type = downcase(first_fw_action)
                   }
               }
           }

@@ -150,7 +150,7 @@ parser_vrl: |
   if exists(parsed.sessionid) { .udm.session_id = string!(parsed.sessionid) }
 
   # --- Action ---
-  if exists(parsed.action) { .udm.action = downcase(string!(parsed.action)) }
+  if exists(parsed.action) { .udm.event_type = downcase(string!(parsed.action)) }
 
   # --- User ---
   if exists(parsed.user) { .udm.user = string!(parsed.user) }
@@ -368,7 +368,7 @@ parser_vrl: |
           }
 
           # Map login/logout actions to auth fields
-          action_str = downcase(to_string!(.udm.action))
+          action_str = downcase(to_string!(.udm.event_type))
           if action_str == "login" || action_str == "logout" {
               .udm.auth_type = "admin"
               if exists(parsed.status) {

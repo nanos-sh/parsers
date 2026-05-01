@@ -106,7 +106,7 @@ parser_vrl: |
               .ext.severity_score = sev_num
           }
 
-          .udm.action = cb_type
+          .udm.event_type = cb_type
           if exists(parsed.reason) { .ext.reason = to_string(parsed.reason) ?? null }
           if exists(parsed.reason_code) { .ext.reason_code = to_string(parsed.reason_code) ?? null }
           if exists(parsed.threat_id) { .ext.threat_id = to_string(parsed.threat_id) ?? null }
@@ -241,7 +241,7 @@ parser_vrl: |
               }
           }
 
-          .udm.action = cb_type
+          .udm.event_type = cb_type
 
       } else {
           # ------------------------------------------------------------------
@@ -253,7 +253,7 @@ parser_vrl: |
                   .udm.timestamp = ts
               }
           }
-          .udm.action = cb_type
+          .udm.event_type = cb_type
       }
 
       # Default timestamp
