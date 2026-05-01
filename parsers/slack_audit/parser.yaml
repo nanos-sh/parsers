@@ -50,7 +50,7 @@ parser_vrl: |
 
       # --- Action ---
       if exists(parsed.action) {
-          .udm.action = string!(parsed.action)
+          .udm.event_type = string!(parsed.action)
       }
 
       # --- Actor ---

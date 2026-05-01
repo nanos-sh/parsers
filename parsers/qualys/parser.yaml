@@ -45,7 +45,7 @@ parser_vrl: |
 
       if is_host_detection {
           # --- Host Detection (VM) ---
-          .udm.action = "vulnerability_detected"
+          .udm.event_type = "vulnerability_detected"
           .udm.category = "vulnerability"
 
           if exists(parsed.IP) {
@@ -157,7 +157,7 @@ parser_vrl: |
 
       } else if is_was {
           # --- Web Application Scan (WAS) ---
-          .udm.action = "web_vuln_detected"
+          .udm.event_type = "web_vuln_detected"
           .udm.category = "vulnerability"
 
           if exists(parsed.id) {
@@ -254,7 +254,7 @@ parser_vrl: |
 
       } else if is_compliance {
           # --- Compliance Finding ---
-          .udm.action = "compliance_finding"
+          .udm.event_type = "compliance_finding"
           .udm.category = "compliance"
 
           if exists(parsed.id) {
@@ -322,7 +322,7 @@ parser_vrl: |
 
       } else if is_knowledge_base {
           # --- Knowledge Base (QID detail) ---
-          .udm.action = "vulnerability_detected"
+          .udm.event_type = "vulnerability_detected"
           .udm.category = "vulnerability"
 
           if exists(parsed.QID) {
@@ -400,7 +400,7 @@ parser_vrl: |
 
       } else {
           # Unknown Qualys event type - store everything in ext
-          .udm.action = "unknown"
+          .udm.event_type = "unknown"
           .ext.raw_parsed = encode_json(parsed)
       }
 

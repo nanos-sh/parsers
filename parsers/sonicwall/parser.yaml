@@ -68,33 +68,33 @@ parser_vrl: |
       .ext.message = msg
       msg_lower = downcase(msg)
       if contains(msg_lower, "connection opened") {
-          .udm.action = "allow"
+          .udm.event_type = "allow"
           .metadata.event_category = "network"
       } else if contains(msg_lower, "connection closed") {
-          .udm.action = "close"
+          .udm.event_type = "close"
           .metadata.event_category = "network"
       } else if contains(msg_lower, "connection dropped") {
-          .udm.action = "drop"
+          .udm.event_type = "drop"
           .metadata.event_category = "network"
       } else if contains(msg_lower, "ips detection") {
-          .udm.action = "alert"
+          .udm.event_type = "alert"
           .metadata.event_category = "intrusion"
       } else if contains(msg_lower, "web site hit") {
-          .udm.action = "allow"
+          .udm.event_type = "allow"
           .metadata.event_category = "web"
       } else if contains(msg_lower, "web site blocked") {
-          .udm.action = "block"
+          .udm.event_type = "block"
           .metadata.event_category = "web"
       } else if contains(msg_lower, "login successful") {
-          .udm.action = "login"
+          .udm.event_type = "login"
           .udm.auth_result = "success"
           .metadata.event_category = "authentication"
       } else if contains(msg_lower, "login failed") {
-          .udm.action = "login"
+          .udm.event_type = "login"
           .udm.auth_result = "failure"
           .metadata.event_category = "authentication"
       } else if contains(msg_lower, "logout") {
-          .udm.action = "logout"
+          .udm.event_type = "logout"
           .metadata.event_category = "authentication"
       } else {
           .metadata.event_category = "system"
@@ -166,7 +166,7 @@ parser_vrl: |
   if exists(parsed.fw_action) {
       fw_act = downcase(string!(parsed.fw_action))
       if fw_act != "na" {
-          .udm.action = fw_act
+          .udm.event_type = fw_act
       }
   }
 

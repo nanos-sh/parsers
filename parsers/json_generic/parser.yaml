@@ -57,7 +57,7 @@ parser_vrl: |
       if exists(parsed.dest_user) { .udm.dest_user = parsed.dest_user } else if exists(parsed.target_user) { .udm.dest_user = parsed.target_user }
 
       # --- Action & Severity ---
-      if exists(parsed.action) { .udm.action = parsed.action } else if exists(parsed.event_action) { .udm.action = parsed.event_action } else if exists(parsed.activity) { .udm.action = parsed.activity }
+      if exists(parsed.action) { .udm.event_type = parsed.action } else if exists(parsed.event_action) { .udm.event_type = parsed.event_action } else if exists(parsed.activity) { .udm.event_type = parsed.activity }
 
       if exists(parsed.severity) { .udm.severity = parsed.severity } else if exists(parsed.level) { .udm.severity = parsed.level } else if exists(parsed.log_level) { .udm.severity = parsed.log_level }
 

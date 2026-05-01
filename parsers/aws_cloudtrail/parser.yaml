@@ -41,7 +41,7 @@ parser_vrl: |
 
       # Action (Event Name)
       if exists(parsed.eventName) {
-          .udm.action = string!(parsed.eventName)
+          .udm.event_type = string!(parsed.eventName)
       }
 
       # Cloud Service (from eventSource, e.g., "s3.amazonaws.com" -> "s3")

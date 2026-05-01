@@ -173,7 +173,7 @@ parser_vrl: |
 
       # ===== PROCESS EVENTS =====
       if event_name == "ProcessRollup2" || event_name == "SyntheticProcessRollup2" {
-          .udm.action = "process_create"
+          .udm.event_type = "process_create"
           .udm.category = "process"
 
           if exists(parsed.ImageFileName) {
@@ -262,7 +262,7 @@ parser_vrl: |
           }
 
       } else if event_name == "EndOfProcess" {
-          .udm.action = "process_terminate"
+          .udm.event_type = "process_terminate"
           .udm.category = "process"
 
           if exists(parsed.TargetProcessId) {
@@ -285,7 +285,7 @@ parser_vrl: |
 
       # ===== NETWORK EVENTS =====
       } else if event_name == "NetworkConnectIP4" || event_name == "NetworkConnectIP6" {
-          .udm.action = "network_connect"
+          .udm.event_type = "network_connect"
           .udm.category = "network"
 
           if exists(parsed.LocalAddressIP4) {
@@ -346,7 +346,7 @@ parser_vrl: |
           }
 
       } else if event_name == "NetworkCloseIP4" || event_name == "NetworkCloseIP6" {
-          .udm.action = "network_close"
+          .udm.event_type = "network_close"
           .udm.category = "network"
 
           if exists(parsed.LocalAddressIP4) {
@@ -398,7 +398,7 @@ parser_vrl: |
           }
 
       } else if event_name == "NetworkListenIP4" || event_name == "NetworkListenIP6" {
-          .udm.action = "network_listen"
+          .udm.event_type = "network_listen"
           .udm.category = "network"
 
           if exists(parsed.LocalAddressIP4) {
@@ -425,7 +425,7 @@ parser_vrl: |
           }
 
       } else if event_name == "NetworkReceiveAcceptIP4" || event_name == "NetworkReceiveAcceptIP6" {
-          .udm.action = "network_accept"
+          .udm.event_type = "network_accept"
           .udm.category = "network"
 
           if exists(parsed.LocalAddressIP4) {
@@ -465,7 +465,7 @@ parser_vrl: |
 
       # ===== DNS EVENTS =====
       } else if event_name == "DnsRequest" {
-          .udm.action = "dns_query"
+          .udm.event_type = "dns_query"
           .udm.category = "dns"
 
           if exists(parsed.DomainName) {
@@ -532,13 +532,13 @@ parser_vrl: |
       # ===== FILE EVENTS =====
       } else if event_name == "GzipFileWritten" || event_name == "NewExecutableWritten" || event_name == "PeFileWritten" || event_name == "NewScriptWritten" || event_name == "DirectoryCreate" || event_name == "CriticalFileAccessed" {
           if event_name == "DirectoryCreate" {
-              .udm.action = "directory_create"
+              .udm.event_type = "directory_create"
               .udm.file_action = "created"
           } else if event_name == "CriticalFileAccessed" {
-              .udm.action = "file_access"
+              .udm.event_type = "file_access"
               .udm.file_action = "accessed"
           } else {
-              .udm.action = "file_write"
+              .udm.event_type = "file_write"
               .udm.file_action = "created"
           }
           .udm.category = "file"
@@ -587,7 +587,7 @@ parser_vrl: |
 
       # ===== AUTHENTICATION EVENTS =====
       } else if event_name == "UserLogon" {
-          .udm.action = "logon"
+          .udm.event_type = "logon"
           .udm.category = "authentication"
           .udm.auth_result = "success"
 
@@ -650,7 +650,7 @@ parser_vrl: |
           }
 
       } else if event_name == "UserLogoff" {
-          .udm.action = "logoff"
+          .udm.event_type = "logoff"
           .udm.category = "authentication"
 
           if exists(parsed.UserName) {
@@ -668,7 +668,7 @@ parser_vrl: |
           }
 
       } else if event_name == "UserLogonFailed" || event_name == "UserLogonFailed2" {
-          .udm.action = "logon_failed"
+          .udm.event_type = "logon_failed"
           .udm.category = "authentication"
           .udm.auth_result = "failure"
 
@@ -710,7 +710,7 @@ parser_vrl: |
 
       # ===== REGISTRY EVENTS =====
       } else if event_name == "AsepValueUpdate" {
-          .udm.action = "registry_modify"
+          .udm.event_type = "registry_modify"
           .udm.category = "registry"
 
           if exists(parsed.TargetObjectPath) {
@@ -731,7 +731,7 @@ parser_vrl: |
 
       # ===== DETECTION / ALERT EVENTS =====
       } else if event_name == "DetectionSummaryEvent" {
-          .udm.action = "detection"
+          .udm.event_type = "detection"
           .udm.category = "alert"
 
           if exists(parsed.DetectName) {
@@ -838,7 +838,7 @@ parser_vrl: |
 
       # ===== SERVICE / DRIVER EVENTS =====
       } else if event_name == "ServiceStarted" {
-          .udm.action = "service_start"
+          .udm.event_type = "service_start"
           .udm.category = "system"
 
           if exists(parsed.ServiceDisplayName) {
@@ -867,7 +867,7 @@ parser_vrl: |
           }
 
       } else if event_name == "DriverLoad" {
-          .udm.action = "driver_load"
+          .udm.event_type = "driver_load"
           .udm.category = "system"
 
           if exists(parsed.ImageFileName) {
@@ -893,7 +893,7 @@ parser_vrl: |
 
       # ===== IMAGE HASH EVENT =====
       } else if event_name == "ImageHash" {
-          .udm.action = "image_hash"
+          .udm.event_type = "image_hash"
           .udm.category = "process"
 
           if exists(parsed.ImageFileName) {
@@ -922,7 +922,7 @@ parser_vrl: |
 
       # ===== SCHEDULED TASK EVENTS =====
       } else if event_name == "ScheduledTaskRegistered" {
-          .udm.action = "scheduled_task_create"
+          .udm.event_type = "scheduled_task_create"
           .udm.category = "system"
 
           if exists(parsed.TaskName) {
@@ -946,7 +946,7 @@ parser_vrl: |
 
       # ===== INJECTION EVENTS =====
       } else if event_name == "InjectedThread" {
-          .udm.action = "thread_inject"
+          .udm.event_type = "thread_inject"
           .udm.category = "process"
 
           if exists(parsed.InjectingProcessId) {
@@ -981,7 +981,7 @@ parser_vrl: |
 
       # ===== SCRIPT CONTROL EVENTS =====
       } else if event_name == "ScriptControlScanInfo" {
-          .udm.action = "script_control"
+          .udm.event_type = "script_control"
           .udm.category = "process"
 
           if exists(parsed.ScriptContent) {
@@ -1000,7 +1000,7 @@ parser_vrl: |
 
       # ===== WMI EVENTS =====
       } else if event_name == "WmiCreateProcess" {
-          .udm.action = "wmi_process_create"
+          .udm.event_type = "wmi_process_create"
           .udm.category = "process"
 
           if exists(parsed.ImageFileName) {
@@ -1026,7 +1026,7 @@ parser_vrl: |
 
       # ===== INSTALLED APPLICATION / OS INFO =====
       } else if event_name == "InstalledApplication" {
-          .udm.action = "installed_application"
+          .udm.event_type = "installed_application"
           .udm.category = "inventory"
 
           if exists(parsed.AppName) {
@@ -1046,7 +1046,7 @@ parser_vrl: |
           }
 
       } else if event_name == "OsVersionInfo" {
-          .udm.action = "os_version_info"
+          .udm.event_type = "os_version_info"
           .udm.category = "inventory"
 
           if exists(parsed.MajorVersion) {
@@ -1072,7 +1072,7 @@ parser_vrl: |
       } else {
           # For unhandled event types, set action from event_simpleName
           event_action = downcase(event_name)
-          .udm.action = event_action
+          .udm.event_type = event_action
 
           # Still try to extract common process fields if present
           if exists(parsed.ImageFileName) {
@@ -1105,7 +1105,7 @@ parser_vrl: |
   } else {
       .metadata.parse_error = to_string(err)
       .udm.timestamp = now()
-      .udm.action = "unknown"
+      .udm.event_type = "unknown"
   }
 
   if !exists(.udm.timestamp) {

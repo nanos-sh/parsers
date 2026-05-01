@@ -73,7 +73,7 @@ parser_vrl: |
 
           # Type -> action
           if exists(parsed.type) {
-              .udm.action = string!(parsed.type)
+              .udm.event_type = string!(parsed.type)
           }
 
           # Country
@@ -130,7 +130,7 @@ parser_vrl: |
 
           # Action
           if exists(parsed.action) {
-              .udm.action = string!(parsed.action)
+              .udm.event_type = string!(parsed.action)
           }
 
           # Item / vault
@@ -194,7 +194,7 @@ parser_vrl: |
           .udm.category = "other"
 
           if exists(parsed.action) {
-              .udm.action = to_string(parsed.action) ?? ""
+              .udm.event_type = to_string(parsed.action) ?? ""
           }
           if exists(parsed.client.ip) {
               .udm.src_ip = string!(parsed.client.ip)

@@ -160,7 +160,7 @@ parser_vrl: |
       # --- IDP-specific fields ---
       if exists(parsed."attack-name") { .udm.signature = string!(parsed."attack-name") }
       if exists(parsed."threat-severity") { .udm.severity = downcase(string!(parsed."threat-severity")) }
-      if exists(parsed.action) { .udm.action = downcase(string!(parsed.action)) }
+      if exists(parsed.action) { .udm.event_type = downcase(string!(parsed.action)) }
       if exists(parsed."rule-name") {
           idp_rule = string!(parsed."rule-name")
           .ext.idp_rule_name = idp_rule
@@ -180,13 +180,13 @@ parser_vrl: |
   msg_id_lower = downcase(msg_id)
   if contains(msg_id_lower, "rt_flow_session_create") {
       .metadata.event_category = "network"
-      if !exists(.udm.action) { .udm.action = "allow" }
+      if !exists(.udm.event_type) { .udm.event_type = "allow" }
   } else if contains(msg_id_lower, "rt_flow_session_close") {
       .metadata.event_category = "network"
-      if !exists(.udm.action) { .udm.action = "close" }
+      if !exists(.udm.event_type) { .udm.event_type = "close" }
   } else if contains(msg_id_lower, "rt_flow_session_deny") {
       .metadata.event_category = "network"
-      if !exists(.udm.action) { .udm.action = "deny" }
+      if !exists(.udm.event_type) { .udm.event_type = "deny" }
   } else if contains(msg_id_lower, "rt_idp") {
       .metadata.event_category = "intrusion"
   } else if contains(msg_id_lower, "rt_utm") {

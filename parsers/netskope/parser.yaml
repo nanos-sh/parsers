@@ -79,7 +79,7 @@ parser_vrl: |
 
       # Activity -> action
       if exists(parsed.activity) {
-          .udm.action = string!(parsed.activity)
+          .udm.event_type = string!(parsed.activity)
       }
 
       # Action -> result

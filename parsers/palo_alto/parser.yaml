@@ -219,7 +219,7 @@ parser_vrl: |
       if num_fields > 30 {
           action = downcase(to_string(fields[30]))
           if action != "" {
-              .udm.action = action
+              .udm.event_type = action
           }
       }
 
@@ -350,7 +350,7 @@ parser_vrl: |
       if num_fields > 30 {
           action = downcase(to_string(fields[30]))
           if action != "" {
-              .udm.action = action
+              .udm.event_type = action
           }
       }
 
@@ -574,7 +574,7 @@ parser_vrl: |
 
       # Set action from subtype for system events
       if subtype != "" {
-          .udm.action = downcase(subtype)
+          .udm.event_type = downcase(subtype)
       }  # ═══════════════════════════════════════════
   # CONFIG logs
   # ═══════════════════════════════════════════
@@ -595,7 +595,7 @@ parser_vrl: |
       if num_fields > 9 {
           v = to_string(fields[9])
           if v != "" {
-              .udm.action = downcase(v)
+              .udm.event_type = downcase(v)
               .ext.command = v
           }
       }
@@ -645,7 +645,7 @@ parser_vrl: |
 
       # Set action from subtype (login, logout)
       if subtype != "" {
-          .udm.action = downcase(subtype)
+          .udm.event_type = downcase(subtype)
       }
 
       if num_fields > 7 { v = to_string(fields[7]); if v != "" { .ext.vsys = v } }
@@ -698,7 +698,7 @@ parser_vrl: |
 
       # Set action from subtype
       if subtype != "" {
-          .udm.action = downcase(subtype)
+          .udm.event_type = downcase(subtype)
       }
 
       # GP format: pos 7=vsys, 8=event_id, 9=stage, 10=auth_method, 11=tunnel_type
@@ -787,7 +787,7 @@ parser_vrl: |
 
       # Set action based on subtype
       if subtype != "" {
-          .udm.action = downcase(subtype)
+          .udm.event_type = downcase(subtype)
       }  # ═══════════════════════════════════════════
   # AUTHENTICATION logs (PAN-OS 8.0+)
   # ═══════════════════════════════════════════
@@ -803,7 +803,7 @@ parser_vrl: |
 
       # Set action from subtype
       if subtype != "" {
-          .udm.action = downcase(subtype)
+          .udm.event_type = downcase(subtype)
       }
 
       if num_fields > 7 { v = to_string(fields[7]); if v != "" { .ext.vsys = v } }

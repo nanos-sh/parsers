@@ -92,7 +92,7 @@ parser_vrl: |
 
           # Action
           if exists(props.Action) {
-              .udm.action = string!(props.Action)
+              .udm.event_type = string!(props.Action)
           }
 
           # Rule

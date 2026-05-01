@@ -115,7 +115,7 @@ parser_vrl: |
       # --- Actions Executed ---
       actions = string!(matched.actions_executed)
       if actions != "" && actions != "-" {
-          .udm.action = actions
+          .udm.event_type = actions
       }
 
       # --- ELB Type ---

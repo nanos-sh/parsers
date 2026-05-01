@@ -172,7 +172,7 @@ parser_vrl: |
                       .udm.src_port = to_int(string!(ssh_accept.port)) ?? null
                       .udm.auth_result = "success"
                       .udm.auth_type = "ssh"
-                      .udm.action = "login"
+                      .udm.event_type = "login"
                   } else {
                       # Failed password for USER from IP port PORT
                       ssh_fail, ssh_f_err = parse_regex(msg_body, r'Failed\s+(?P<method>\S+)\s+for\s+(?:invalid user\s+)?(?P<user>\S+)\s+from\s+(?P<ip>\S+)\s+port\s+(?P<port>\d+)')
@@ -182,7 +182,7 @@ parser_vrl: |
                           .udm.src_port = to_int(string!(ssh_fail.port)) ?? null
                           .udm.auth_result = "failure"
                           .udm.auth_type = "ssh"
-                          .udm.action = "login_failed"
+                          .udm.event_type = "login_failed"
                       }
                   }
 
@@ -196,7 +196,7 @@ parser_vrl: |
                       .udm.command_line = string!(sudo_match.command)
                       .ext.tty = string!(sudo_match.tty)
                       .ext.working_directory = string!(sudo_match.pwd)
-                      .udm.action = "sudo"
+                      .udm.event_type = "sudo"
                       .udm.auth_type = "sudo"
 
                       # Extract command name
@@ -229,7 +229,7 @@ parser_vrl: |
                           if exists(ipt_kv.OUT) { .ext.interface_out = to_string(ipt_kv.OUT) ?? null }
                           if exists(ipt_kv.MAC) { .ext.mac_address = to_string(ipt_kv.MAC) ?? null }
                       }
-                      .udm.action = "firewall"
+                      .udm.event_type = "firewall"
                   }
               }
 

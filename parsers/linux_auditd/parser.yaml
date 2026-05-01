@@ -95,7 +95,7 @@ parser_vrl: |
               .udm.result = succ
           }
           if exists(kv.exit) { .ext.exit_code = to_string(kv.exit) ?? null }
-          .udm.action = "syscall"
+          .udm.event_type = "syscall"
 
       } else if audit_type == "EXECVE" {
           # ------------------------------------------------------------------
@@ -130,7 +130,7 @@ parser_vrl: |
                   .udm.process_name = to_string!(first_arg)
               }
           }
-          .udm.action = "exec"
+          .udm.event_type = "exec"
 
       } else if audit_type == "PATH" {
           # ------------------------------------------------------------------
@@ -152,7 +152,7 @@ parser_vrl: |
           if exists(kv.inode) { .ext.inode = to_string(kv.inode) ?? null }
           if exists(kv.mode) { .ext.file_mode = to_string(kv.mode) ?? null }
           if exists(kv.nametype) { .ext.nametype = to_string(kv.nametype) ?? null }
-          .udm.action = "path"
+          .udm.event_type = "path"
 
       } else if audit_type == "CWD" {
           # ------------------------------------------------------------------
@@ -162,13 +162,13 @@ parser_vrl: |
               cwd_val = replace(to_string(kv.cwd) ?? "", "\"", "")
               .ext.cwd = cwd_val
           }
-          .udm.action = "cwd"
+          .udm.event_type = "cwd"
 
       } else if audit_type == "USER_AUTH" || audit_type == "USER_LOGIN" || audit_type == "CRED_ACQ" || audit_type == "CRED_DISP" {
           # ------------------------------------------------------------------
           # Authentication events
           # ------------------------------------------------------------------
-          .udm.action = downcase(audit_type)
+          .udm.event_type = downcase(audit_type)
 
           if exists(kv.pid) { .udm.process_id = to_string(kv.pid) ?? null }
           if exists(kv.uid) { .ext.uid = to_string(kv.uid) ?? null }
@@ -237,7 +237,7 @@ parser_vrl: |
           # ------------------------------------------------------------------
           # SELinux AVC events
           # ------------------------------------------------------------------
-          .udm.action = "selinux_avc"
+          .udm.event_type = "selinux_avc"
 
           # Parse avc: denied/granted { permission }
           avc_match, avc_err = parse_regex(body, r'avc:\s+(?P<decision>\w+)\s+\{\s*(?P<perm>[^}]+)\}')
@@ -283,7 +283,7 @@ parser_vrl: |
           # ------------------------------------------------------------------
           # NETFILTER_PKT — network packet events
           # ------------------------------------------------------------------
-          .udm.action = "netfilter"
+          .udm.event_type = "netfilter"
 
           if exists(kv.saddr) { .udm.src_ip = to_string(kv.saddr) ?? null }
           if exists(kv.daddr) { .udm.dest_ip = to_string(kv.daddr) ?? null }
@@ -305,7 +305,7 @@ parser_vrl: |
 
       } else {
           # Unknown audit type — store what we can
-          .udm.action = downcase(audit_type)
+          .udm.event_type = downcase(audit_type)
           if exists(kv.pid) { .udm.process_id = to_string(kv.pid) ?? null }
           if exists(kv.uid) { .ext.uid = to_string(kv.uid) ?? null }
       }

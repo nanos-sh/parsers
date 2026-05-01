@@ -41,7 +41,7 @@ parser_vrl: |
           .ext.query = string!(parsed.domain)
       }
       if exists(parsed.action) {
-          .udm.action = string!(parsed.action)
+          .udm.event_type = string!(parsed.action)
       }
       if exists(parsed.identity) {
           .udm.user = string!(parsed.identity)
@@ -118,7 +118,7 @@ parser_vrl: |
 
               # Field 7 = action
               if field_count > 7 {
-                  .udm.action = string!(fields[7])
+                  .udm.event_type = string!(fields[7])
               }
 
               # Field 8 = status code
@@ -164,7 +164,7 @@ parser_vrl: |
               .udm.category = "dns"
 
               # Field 5 = action
-              .udm.action = field5
+              .udm.event_type = field5
 
               # Field 6 = query type
               if field_count > 6 {

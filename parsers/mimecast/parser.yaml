@@ -79,7 +79,7 @@ parser_vrl: |
 
           # Action
           if exists(parsed.Act) {
-              .udm.action = string!(parsed.Act)
+              .udm.event_type = string!(parsed.Act)
           }
 
           # Direction
@@ -171,7 +171,7 @@ parser_vrl: |
 
           # Action
           if exists(parsed.action) {
-              .udm.action = string!(parsed.action)
+              .udm.event_type = string!(parsed.action)
           }
 
           # Source IP
@@ -233,7 +233,7 @@ parser_vrl: |
               .udm.category = string!(parsed.result)
           }
           if exists(parsed.actionTriggered) {
-              .udm.action = string!(parsed.actionTriggered)
+              .udm.event_type = string!(parsed.actionTriggered)
           }
 
           # Details

@@ -97,7 +97,7 @@ parser_vrl: |
 
       # Operation -> action
       if exists(parsed.Operation) {
-          .udm.action = string!(parsed.Operation)
+          .udm.event_type = string!(parsed.Operation)
       }
 
       # ResultStatus -> result
@@ -421,7 +421,7 @@ parser_vrl: |
                           if exists(r0.Actions) && is_array(r0.Actions) {
                               actions = array!(r0.Actions)
                               if length(actions) > 0 {
-                                  .udm.action = to_string(get!(actions, [0])) ?? operation
+                                  .udm.event_type = to_string(get!(actions, [0])) ?? operation
                               }
                           }
                       }

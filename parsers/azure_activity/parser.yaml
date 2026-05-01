@@ -39,9 +39,9 @@ parser_vrl: |
 
       # Action / Operation
       if exists(parsed.operationName.value) {
-          .udm.action = string!(parsed.operationName.value)
+          .udm.event_type = string!(parsed.operationName.value)
       } else if exists(parsed.eventName.value) {
-          .udm.action = string!(parsed.eventName.value)
+          .udm.event_type = string!(parsed.eventName.value)
       }
 
       # Status

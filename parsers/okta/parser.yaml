@@ -41,7 +41,7 @@ parser_vrl: |
 
       # --- Event Type / Action ---
       if exists(parsed.eventType) {
-          .udm.action = string!(parsed.eventType)
+          .udm.event_type = string!(parsed.eventType)
       }
 
       # --- Display Message ---

@@ -49,7 +49,7 @@ parser_vrl: |
           dhcp_type = "unknown"
           if type_match != null {
               dhcp_type = string!(type_match.type)
-              .udm.action = downcase(dhcp_type)
+              .udm.event_type = downcase(dhcp_type)
           }
 
           if dhcp_type == "DHCPDISCOVER" {

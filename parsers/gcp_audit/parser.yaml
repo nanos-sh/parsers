@@ -111,7 +111,7 @@ parser_vrl: |
           # Action / Method + change_type derivation
           if exists(payload.methodName) {
               method_name = string!(payload.methodName)
-              .udm.action = method_name
+              .udm.event_type = method_name
 
               # Split method name and grab last segment as the verb
               method_parts = split(method_name, ".")
